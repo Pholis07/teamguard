@@ -149,7 +149,7 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
   /* Con ausencia */
   const nuevo = propuesta ? miembroPorId(members, propuesta.candidateId) : undefined
   const dueno = propuesta ? miembroPorId(members, propuesta.currentOwnerId) : undefined
-  const riesgo = pendientes.length > 0 ? 'Medio' : 'Bajo'
+  const riesgo = equilibrio(contexto).riesgo
 
   return (
     <Pagina

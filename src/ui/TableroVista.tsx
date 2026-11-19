@@ -59,11 +59,8 @@ export function TableroVista({ proyecto, members, tasks, contexto, decisiones, o
     )
   }
 
-  const sobrecargados = cargas.filter((c) => c.status === 'overloaded')
-  const alto = sobrecargados.length > 0
   const libres = cargas.reduce((s, c) => s + c.remainingHours, 0)
   const entrega = abiertas.map((t) => t.dueDate).sort().at(-1)
-  const nombres = sobrecargados.map((c) => miembroPorId(members, c.memberId)?.name ?? c.memberId).join(' y ')
 
   const proyectadas = simulacion?.projectedLoads
   const tareaSim = simulacion && tasks.find((t) => t.id === simulacion.taskId)
@@ -93,6 +90,12 @@ export function TableroVista({ proyecto, members, tasks, contexto, decisiones, o
   const tareasSim = simulacion ? tasks.map((t) => (t.id === simulacion.taskId ? { ...t, ownerId: simulacion.candidateId } : t)) : tasks
   const tareasDe = (id: string) => tareasSim.filter((t) => t.ownerId === id && t.status !== 'done')
   const eq = equilibrio(contexto)
+  const nombres = (ids: readonly string[]) => ids.map((id) => miembroPorId(members, id)?.name ?? id).join(' y ')
+  // La frase sale del mismo cálculo que el equilibrio y el riesgo, para que nunca se contradigan.
+  const problemas = [
+    eq.sinCubrir.length > 0 && `${eq.sinCubrir.map((t) => `${t.title} (${horas(t.estimatedHours)} h)`).join(', ')} no ${plural(eq.sinCubrir.length, 'tiene', 'tienen')} quién la cubra durante la ausencia`,
+    eq.sobrecargados.length > 0 && `${nombres(eq.sobrecargados)} ${plural(eq.sobrecargados.length, 'pasa', 'pasan')} de su disponibilidad`,
+  ].filter(Boolean)
   const vencidas = abiertas.filter((t) => isTaskOverdue(t, contexto.asOf))
   const eqSim = simulacion ? equilibrio({ ...contexto, tasks: tareasSim }) : null
 
@@ -108,7 +111,7 @@ export function TableroVista({ proyecto, members, tasks, contexto, decisiones, o
               <span className="fa"> · {horas((eqSim ?? eq).caben)} de {horas((eqSim ?? eq).total)} h caben</span>
             </span>
           ) },
-          { icono: 'estado', etiqueta: 'Riesgo', valor: <Etiqueta color={COLOR_RIESGO[alto ? 'Alto' : 'Bajo']}>{alto ? 'Alto' : 'Bajo'}</Etiqueta> },
+          { icono: 'estado', etiqueta: 'Riesgo', valor: <Etiqueta color={COLOR_RIESGO[eq.riesgo]}>{eq.riesgo}</Etiqueta> },
           { icono: 'calendario', etiqueta: 'Entrega', valor: entrega ? fecha(entrega) : '—' },
           { icono: 'personas', etiqueta: 'Integrantes', valor: (
             <span className="p-persona">
@@ -121,8 +124,8 @@ export function TableroVista({ proyecto, members, tasks, contexto, decisiones, o
       }
     >
       <p className="p-estado">
-        {alto ? 'Hay sobrecarga.' : 'Todo en orden.'}
-        <span className="fa">{alto ? `${nombres} ${plural(sobrecargados.length, 'pasa', 'pasan')} de su disponibilidad.` : 'Nadie está sobrecargado.'}</span>
+        {problemas.length > 0 ? 'Hay trabajo que no cabe.' : 'Todo en orden.'}{' '}
+        <span className="fa">{problemas.length > 0 ? `${problemas.join('; ')}.` : 'Nadie está sobrecargado.'}</span>
       </p>
       {vencidas.length > 0 && (
         <p className="p-nota" role="status">

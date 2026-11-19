@@ -15,7 +15,7 @@ type Props = {
 export function EntregaVista({ tasks, members, files, decisiones, onAddFile }: Props) {
   const [error, setError] = useState<string | null>(null)
   const nombre = (id: string) => members.find((m) => m.id === id)?.name ?? id
-  const avatar = (id: string) => `av av${members.findIndex((m) => m.id === id) + 1}`
+  const avatar = (id: string) => `av av${(members.findIndex((m) => m.id === id) % 3) + 1}`
   const { listas, total } = progresoEntrega(tasks, files)
   const faltan = total - listas
 
