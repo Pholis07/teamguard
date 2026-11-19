@@ -4,6 +4,13 @@ import type { Member, Task } from '../domain'
 /** Un archivo ligado a su tarea y a quien lo subió (la autoría no cambia al reasignar). */
 export type Entrega = { taskId: string; uploaderId: string; file: File }
 
+/** Tareas obligatorias con al menos un archivo: habilita la descarga cuando listas === total. */
+export function progresoEntrega(tasks: readonly Task[], entregas: readonly Entrega[]) {
+  const obligatorias = tasks.filter((t) => t.requiresFile)
+  const listas = obligatorias.filter((t) => entregas.some((e) => e.taskId === t.id)).length
+  return { listas, total: obligatorias.length }
+}
+
 function conSufijo(nombre: string, n: number) {
   const punto = nombre.lastIndexOf('.')
   return punto > 0 ? `${nombre.slice(0, punto)} (${n})${nombre.slice(punto)}` : `${nombre} (${n})`

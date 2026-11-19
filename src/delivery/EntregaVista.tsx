@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Member, Task } from '../domain'
-import { armarZip, type Entrega } from './zip'
+import { armarZip, progresoEntrega, type Entrega } from './zip'
 import './entrega.css'
 
 type Props = {
@@ -14,9 +14,8 @@ export function EntregaVista({ tasks, members, files, onAddFile }: Props) {
   const [error, setError] = useState<string | null>(null)
   const nombre = (id: string) => members.find((m) => m.id === id)?.name ?? id
   const avatar = (id: string) => `av av${members.findIndex((m) => m.id === id) + 1}`
-  const obligatorias = tasks.filter((t) => t.requiresFile)
-  const listas = obligatorias.filter((t) => files.some((f) => f.taskId === t.id)).length
-  const faltan = obligatorias.length - listas
+  const { listas, total } = progresoEntrega(tasks, files)
+  const faltan = total - listas
 
   async function descargar() {
     setError(null)
@@ -38,7 +37,7 @@ export function EntregaVista({ tasks, members, files, onAddFile }: Props) {
       <header className="entrega-cabecera">
         <h1>
           <span role="status">
-            {listas} de {obligatorias.length} entregas listas.{' '}
+            {listas} de {total} entregas listas.{' '}
             <span className="fa">
               {faltan > 0 ? `Falta archivo en ${faltan} tarea(s) obligatoria(s).` : 'Ya se puede descargar el ZIP.'}
             </span>

@@ -1,4 +1,4 @@
-import { useReducer, useState, type Dispatch, type ReactNode } from 'react'
+import { useEffect, useReducer, useState, type Dispatch, type ReactNode } from 'react'
 import {
   confirmProposal,
   createDemoState,
@@ -8,7 +8,7 @@ import {
   type RuleContext,
 } from './domain'
 import { EntregaVista } from './delivery/EntregaVista'
-import type { Entrega } from './delivery/zip'
+import { progresoEntrega, type Entrega } from './delivery/zip'
 
 // Estado compartido. Las cargas no se guardan: las calcula B a partir de aquí.
 type Estado = ReturnType<typeof createDemoState> & { files: Entrega[] }
@@ -59,7 +59,14 @@ const icono = (d: ReactNode) => (
   </svg>
 )
 
-const VISTAS: Record<Vista, { label: string; icon: ReactNode; render: (props: VistaProps) => ReactNode }> = {
+type VistaDef = {
+  label: string
+  icon: ReactNode
+  contador?: (estado: Estado) => string
+  render: (props: VistaProps) => ReactNode
+}
+
+const VISTAS: Record<Vista, VistaDef> = {
   tablero: {
     label: 'Tablero',
     icon: icono(<><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>),
@@ -72,6 +79,10 @@ const VISTAS: Record<Vista, { label: string; icon: ReactNode; render: (props: Vi
   },
   entrega: {
     label: 'Entrega',
+    contador: (estado) => {
+      const { listas, total } = progresoEntrega(estado.tasks, estado.files)
+      return `${listas}/${total}`
+    },
     icon: icono(<><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" /><path d="m3.3 7 8.7 5 8.7-5" /><path d="M12 22V12" /></>),
     render: ({ estado, dispatch }) => (
       <EntregaVista
@@ -87,6 +98,10 @@ const VISTAS: Record<Vista, { label: string; icon: ReactNode; render: (props: Vi
 export default function App() {
   const [vista, setVista] = useState<Vista>('tablero')
   const [estado, dispatch] = useReducer(reducer, undefined, estadoInicial)
+  const [oscuro, setOscuro] = useState(() => matchMedia('(prefers-color-scheme: dark)').matches)
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', oscuro)
+  }, [oscuro])
 
   return (
     <div className="shell">
@@ -105,6 +120,7 @@ export default function App() {
             >
               {VISTAS[id].icon}
               {VISTAS[id].label}
+              {VISTAS[id].contador && <span className="n">{VISTAS[id].contador(estado)}</span>}
             </button>
           ))}
         </nav>
@@ -130,6 +146,14 @@ export default function App() {
           <span className="fa">Proyecto final</span>
           <span className="fa">/</span>
           <span>{VISTAS[vista].label}</span>
+          <span className="acciones">
+            <button className="btn btn-s" aria-pressed={oscuro} onClick={() => setOscuro(!oscuro)}>
+              {oscuro ? 'Tema claro' : 'Tema oscuro'}
+            </button>
+            <button className="btn btn-s" onClick={() => dispatch({ type: 'reset' })}>
+              Restablecer demo
+            </button>
+          </span>
         </div>
         <main className="contenido">
           {VISTAS[vista].render({ estado, contexto: contextoDe(estado), dispatch })}
