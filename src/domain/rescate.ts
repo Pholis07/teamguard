@@ -138,7 +138,9 @@ function programar(contexto: RuleContext, tasks: Task[], incidente: Incidente | 
     warnings.push(`Con la capacidad registrada no se termina: ${sinTerminar.map((t) => t.title).join(', ')}.`)
   }
   const lateTaskIds = abiertas.filter((t) => !fin.has(t.id) || fin.get(t.id)! > t.dueDate).map((t) => t.id)
-  const problemas = new Set([...lateTaskIds, ...(incidente ? [incidente.taskId] : [])])
+  // El atraso solo cuenta mientras la tarea siga con quien se atrasó; si se reasignó, ya no bloquea a nadie.
+  const sigueAtrasada = incidente && tasks.find((t) => t.id === incidente.taskId)?.ownerId === incidente.ownerId
+  const problemas = new Set([...lateTaskIds, ...(sigueAtrasada ? [incidente.taskId] : [])])
   const blockedTaskIds = abiertas.filter((t) => [...problemas].some((p) => dependientes(tasks, p).includes(t.id))).map((t) => t.id)
   const overloadedMemberIds = calculateLoads(members, tasks).filter((c) => c.status === 'overloaded').map((c) => c.memberId)
   const estimable = !sinEstimar.length && !ciclo && !sinTerminar.length

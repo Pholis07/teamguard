@@ -48,6 +48,15 @@ test('4 · rescate viable: la Ficha atrasada pasa a quien tiene horas y la habil
   expect(plan).toMatchObject({ estimatedCompletion: '2026-11-20', lateTaskIds: [], feasible: true })
 })
 
+test('3b · al reasignar la tarea atrasada, sus dependientes dejan de estar bloqueados', () => {
+  const base = ctx()
+  const tasks = base.tasks.map((t) => (t.id === 't3' ? { ...t, dependsOn: ['t2'] } : t))
+  const { sinIntervenir, plan } = analizarRescate({ ...base, tasks }, { taskId: 't2', ownerId: 'm2', hasta: lunes })
+  expect(sinIntervenir.blockedTaskIds).toEqual(['t3'])
+  expect(plan.proposedChanges.map((c) => [c.taskId, c.toMemberId])).toEqual([['t2', 'm3']])
+  expect(plan).toMatchObject({ blockedTaskIds: [], lateTaskIds: [], feasible: true })
+})
+
 test('5 · rescate inviable: sin capacidad libre lo reconoce y no inventa cambios', () => {
   const base = ctx()
   const justos = base.members.map((m) => ({ ...m, availableHours: m.id === 'm1' ? 3 : 2 }))

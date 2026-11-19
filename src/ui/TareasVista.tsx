@@ -62,6 +62,7 @@ export function TareasVista({ members, tasks, files, dispatch, onIr }: Props) {
           { icono: 'persona', nombre: 'Responsable', ancho: '124px' },
           { icono: 'numero', nombre: 'Horas', ancho: '84px' },
           { icono: 'calendario', nombre: 'Fecha límite', ancho: '136px' },
+          { icono: 'flecha', nombre: 'Depende de', ancho: '132px' },
           { icono: 'estado', nombre: 'Estado', ancho: '118px' },
           { icono: 'check', nombre: 'Archivo', ancho: '92px' },
         ]}
@@ -109,6 +110,18 @@ export function TareasVista({ members, tasks, files, dispatch, onIr }: Props) {
               </td>
               <td>
                 <FechaCelda tarea={t} dispatch={dispatch} />
+              </td>
+              <td>
+                {/* shortcut: la interfaz edita una sola dependencia por tarea; el motor acepta varias. */}
+                <select
+                  className="cel"
+                  aria-label={`${t.title} depende de`}
+                  value={t.dependsOn?.[0] ?? ''}
+                  onChange={(e) => dispatch({ type: 'updateTask', id: t.id, cambios: { dependsOn: e.target.value ? [e.target.value] : [] } })}
+                >
+                  <option value="">—</option>
+                  {tasks.filter((x) => x.id !== t.id).map((x) => <option key={x.id} value={x.id}>{x.title}</option>)}
+                </select>
               </td>
               <td>
                 <label className="dt-estado">

@@ -14,12 +14,13 @@ export const plural = (n: number, uno: string, varios: string) => (n === 1 ? uno
 export const miembroPorId = (members: readonly Member[], id: string) => members.find((m) => m.id === id)
 
 /* Páginas de la app (barra lateral y migas). */
-export type PaginaId = 'tablero' | 'integrantes' | 'tareas' | 'contingencia' | 'entrega'
+export type PaginaId = 'tablero' | 'integrantes' | 'tareas' | 'contingencia' | 'rescate' | 'entrega'
 export const PAGINAS: readonly { id: PaginaId; icono: NombreIcono; label: string }[] = [
   { id: 'tablero', icono: 'tablero', label: 'Tablero' },
   { id: 'integrantes', icono: 'integrantes', label: 'Integrantes' },
   { id: 'tareas', icono: 'tareas', label: 'Tareas' },
   { id: 'contingencia', icono: 'contingencia', label: 'Contingencia' },
+  { id: 'rescate', icono: 'escudo', label: 'Rescate' },
   { id: 'entrega', icono: 'entrega', label: 'Entrega' },
 ]
 

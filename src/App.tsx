@@ -14,6 +14,7 @@ import { TableroVista } from './ui/TableroVista'
 import { IntegrantesVista } from './ui/IntegrantesVista'
 import { TareasVista } from './ui/TareasVista'
 import { ContingenciaVista } from './ui/ContingenciaVista'
+import { RescateVista } from './ui/RescateVista'
 
 const CLAVE_TEMA = 'tg-tema'
 
@@ -136,6 +137,9 @@ export default function App() {
           onSetAbsence={(absence) => dispatch({ type: 'setAbsence', absence, hora: ahora() })}
           onAccept={(proposal) => dispatch({ type: 'acceptProposal', proposal, hora: ahora() })}
         />
+      )}
+      {pagina === 'rescate' && (
+        <RescateVista contexto={contexto} onAplicar={(change) => dispatch({ type: 'applyRescueChange', change, hora: ahora() })} />
       )}
       {pagina === 'entrega' && (
         <EntregaVista
