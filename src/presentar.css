@@ -1,5 +1,5 @@
 /* Guion de la presentación: tarjeta flotante (oscuro y claro). */
-.n-app:has(.guia) .n-pagina { padding-bottom: 320px; }
+.n-app:has(.guia) .n-pagina { padding-bottom: 340px; }
 .guia {
   position: fixed; right: 20px; bottom: 20px; z-index: 50; width: min(400px, calc(100vw - 24px));
   padding: 16px 18px 14px; border-radius: 8px; background: var(--bg); color: var(--tx);

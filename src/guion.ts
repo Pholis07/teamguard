@@ -13,18 +13,18 @@ export type Paso = {
 export const PASOS: readonly Paso[] = [
   {
     desde: 0, hasta: 10, titulo: 'El problema', vista: 'tablero',
-    decir: 'En muchos proyectos, el problema no es solo organizar tareas: es que el equipo no sabe cuándo se está saturando o cómo reaccionar ante un imprevisto.',
-    hacer: 'Muestra el Tablero: tres integrantes y su carga.',
+    decir: 'En muchos proyectos, el problema no es solo organizar tareas: es que el equipo no sabe cuándo se está saturando o cómo reaccionar ante un imprevisto. Aquí el equilibrio está en 100: todo cabe.',
+    hacer: 'Muestra el Tablero: tres integrantes, su carga y la ficha «Equilibrio 100/100».',
   },
   {
     desde: 10, hasta: 25, titulo: 'Sobrecarga', vista: 'tablero',
-    decir: 'Si la Ficha pasa a Ana, TeamGuard avisa antes de que ocurra: 125 %. Nada cambia hasta que alguien lo decide.',
-    hacer: '«Simular asignación» → Ficha pasa a Ana. Luego «Cancelar simulación».',
+    decir: 'Si la Ficha pasa a Ana, TeamGuard avisa antes de que ocurra: 125 % y el equilibrio baja a 86. Nada cambia hasta que alguien lo decide.',
+    hacer: '«Simular asignación» → Ficha pasa a Ana; señala «Equilibrio 100 → 86». Luego «Cancelar simulación».',
   },
   {
     desde: 25, hasta: 40, titulo: 'Ausencia', vista: 'contingencia',
-    decir: 'Ana se ausenta. Solo guardamos las fechas, nunca el motivo. TeamGuard propone a Luis y una persona decide.',
-    hacer: '«Registrar ausencia» → revisa Luis de 2 a 5 de 6 h → «Aceptar».',
+    decir: 'Ana se ausenta y el equilibrio cae a 57. Solo guardamos las fechas, nunca el motivo. TeamGuard propone a Luis: 57 → 100 si aceptas. Una persona decide.',
+    hacer: '«Registrar ausencia» → señala «Equilibrio 57 → 100 si aceptas» y Luis de 2 a 5 de 6 h → «Aceptar».',
   },
   {
     desde: 40, hasta: 50, titulo: 'Entrega', vista: 'entrega',
@@ -34,7 +34,7 @@ export const PASOS: readonly Paso[] = [
   },
   {
     desde: 50, hasta: 60, titulo: 'Cierre', vista: 'entrega',
-    decir: 'TeamGuard no hace la tarea: protege los acuerdos, equilibra la colaboración y reúne el trabajo real del equipo.',
-    hacer: '«Descargar ZIP» y abre ACTA-DE-ENTREGA.md.',
+    decir: 'La gráfica del equilibrio cuenta la historia: 100, 57, 100. TeamGuard no hace la tarea: protege los acuerdos, equilibra la colaboración y reúne el trabajo real del equipo.',
+    hacer: '«Descargar ZIP» y abre ACTA-DE-ENTREGA.md: decisiones y gráfica del equilibrio (100 → 57 → 100).',
   },
 ]
