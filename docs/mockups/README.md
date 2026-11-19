@@ -1,4 +1,37 @@
-# Mockups TeamGuard · v2
+# Mockups TeamGuard
+
+## v4 · dirección vigente (Tablero aprobado)
+
+Referencias: Gumloop, Solidroad, Cofounder y la galería Godly. Esta es la base para construir la app en `src/ui/`; ya no se hacen más mockups.
+
+- `v4/tablero.html`: el Tablero en HTML y CSS. Se abre directo en el navegador. En `<div class="tg">` agrega `dark` para verlo en oscuro.
+- `v4/tablero-1440-claro.png` y `v4/tablero-1440-oscuro.png`: capturas de referencia.
+- Logo en `public/brand/`: el tigre blanco y negro con fondo transparente, el logo completo y `favicon-512.png`.
+
+**Reglas del sistema:**
+- **Color 60/30/10:**
+  - 60: hoja blanca (`--bg #FFFFFF`).
+  - 30: marco grafito (`--shell #0B0F14`) con la barra lateral encima.
+  - 10: cian (`--ac #0891B2`), solo para progreso, foco, la sección activa y el contador de la campana.
+  - Ámbar y verde solo para estados, siempre con texto.
+- **Tipos:**
+  - Instrument Serif para el título, los subtítulos, la marca y el lema.
+  - Geist para la interfaz.
+  - Geist Mono para las cifras (`.num`).
+- **Título en dos tonos:** una frase de estado en negro y el contexto en gris (`--i3`).
+- **Estructura:**
+  - Marco con margen de 8 px.
+  - Hoja con radio de 14 px y barra superior: migas, campana y avatar.
+  - Franja de 4 métricas separadas solo por líneas.
+  - Carga del equipo en filas: avatar, cifra, barra con la marca de disponibilidad y una etiqueta de horas libres.
+  - Tabla con filtros en píldora.
+- **Barra lateral:** etiquetas grises por grupo, sección activa con punto cian, contador en mono y lema al pie («El trabajo es de todos.» / *«La responsabilidad también.»*).
+- **Botones:** en forma de píldora. El primario usa fondo `ink`; el cian nunca se usa en botones.
+- **Simulación:** las horas de más aparecen como un tramo rayado ámbar (`.hatch`) que pasa la marca de disponibilidad.
+
+Los tokens en claro y oscuro están en el bloque `<style>` de `v4/tablero.html`.
+
+## v2 (histórico)
 
 Dirección visual: **premium tipo Apple/Notion**, con modo claro y oscuro.
 
