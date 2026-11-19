@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { DEMO_ABSENCE, proposeCoverage } from '../domain'
+import { analizarRescate, DEMO_ABSENCE, proposeCoverage } from '../domain'
 import { contextoDe, reducer, estadoInicial, type Estado } from './estado'
 
 const ejemplo = (): Estado => reducer(estadoInicial(), { type: 'cargarEjemplo' })
@@ -30,4 +30,23 @@ test('cada decisión guarda el equilibrio de antes y de después', () => {
   const propuesta = proposeCoverage(contextoDe(conAusencia), 't1').proposal!
   const cubierta = reducer(conAusencia, { type: 'acceptProposal', proposal: propuesta, hora: '11:41' })
   expect(cubierta.decisiones.map((d) => d.equilibrio)).toEqual([{ antes: 100, despues: 57 }, { antes: 57, despues: 100 }])
+})
+
+test('caso 6 · un cambio del plan de rescate solo se aplica al aceptarlo, y queda en la bitácora', () => {
+  const conAusencia = reducer(ejemplo(), { type: 'setAbsence', absence: DEMO_ABSENCE, hora: '12:00' })
+  const [cambio] = analizarRescate(contextoDe(conAusencia)).plan.proposedChanges
+  expect(conAusencia.tasks.find((t) => t.id === 't1')!.ownerId).toBe('m1')
+  const aceptado = reducer(conAusencia, { type: 'applyRescueChange', change: cambio, hora: '12:01' })
+  expect(aceptado.tasks.find((t) => t.id === 't1')!.ownerId).toBe('m2')
+  expect(aceptado.decisiones.at(-1)!.texto).toBe('Boceto pasó de Ana a Luis (plan de rescate)')
+  expect(reducer(aceptado, { type: 'applyRescueChange', change: cambio, hora: '12:02' })).toBe(aceptado)
+})
+
+test('las dependencias inválidas (a sí misma o circulares) se rechazan; al borrar una tarea se limpian', () => {
+  const base = ejemplo()
+  expect(reducer(base, { type: 'updateTask', id: 't1', cambios: { dependsOn: ['t1'] } })).toBe(base)
+  const conDep = reducer(base, { type: 'updateTask', id: 't3', cambios: { dependsOn: ['t2'] } })
+  expect(conDep.tasks.find((t) => t.id === 't3')!.dependsOn).toEqual(['t2'])
+  expect(reducer(conDep, { type: 'updateTask', id: 't2', cambios: { dependsOn: ['t3'] } })).toBe(conDep)
+  expect(reducer(conDep, { type: 'removeTask', id: 't2' }).tasks.find((t) => t.id === 't3')!.dependsOn).toEqual([])
 })

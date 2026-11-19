@@ -1,4 +1,4 @@
-import { confirmProposal, createDemoState, DEMO_DATE, type Absence, type CoverageProposal, type Member, type RuleContext, type Task } from '../domain'
+import { cicloDe, confirmProposal, createDemoState, DEMO_DATE, type Absence, type CoverageProposal, type Member, type ProposedChange, type RuleContext, type Task } from '../domain'
 import type { Entrega } from '../delivery/zip'
 import type { Decision } from '../delivery/acta'
 import { equilibrio } from './equilibrio'
@@ -41,6 +41,8 @@ export type Accion =
   | { type: 'reassignTask'; id: string; ownerId: string; hora: string }
   | { type: 'removeTask'; id: string }
   | { type: 'acceptProposal'; proposal: CoverageProposal; hora: string }
+  // Un cambio del plan de rescate, aceptado por separado; se ignora si quedó obsoleto.
+  | { type: 'applyRescueChange'; change: ProposedChange; hora: string }
   | { type: 'setAbsence'; absence: Absence | null; hora: string }
   | { type: 'addFile'; entrega: Entrega }
   | { type: 'reset' }
@@ -73,6 +75,19 @@ const anotar = (antes: Estado, despues: Estado, hora: string, texto: string): Es
 
 const tareaValida = (t: Task, members: readonly Member[]) =>
   nombreValido(t.title) && horasValidas(t.estimatedHours) && fechaValida(t.dueDate) && members.some((m) => m.id === t.ownerId)
+
+/** Dependencias válidas: existen, no apuntan a sí misma y no forman ciclos. */
+const dependenciasValidas = (tasks: readonly Task[]) =>
+  tasks.every((t) => (t.dependsOn ?? []).every((d) => d !== t.id && tasks.some((x) => x.id === d))) && cicloDe(tasks) === null
+
+/** Cambia el responsable de una tarea y lo anota en la bitácora con el equilibrio de antes y después. */
+const reasignar = (estado: Estado, id: string, ownerId: string, hora: string, origen: string): Estado => {
+  const actual = estado.tasks.find((t) => t.id === id)
+  if (!actual || actual.ownerId === ownerId || !estado.members.some((m) => m.id === ownerId)) return estado
+  const texto = `${actual.title} pasó de ${nombreDe(estado, actual.ownerId)} a ${nombreDe(estado, ownerId)} (${origen})`
+  const tasks = estado.tasks.map((t) => (t.id === actual.id ? { ...t, ownerId } : t))
+  return anotar(estado, { ...estado, tasks }, hora, texto)
+}
 
 export function reducer(estado: Estado, accion: Accion): Estado {
   switch (accion.type) {
@@ -115,20 +130,27 @@ export function reducer(estado: Estado, accion: Accion): Estado {
       const actual = estado.tasks.find((t) => t.id === accion.id)
       if (!actual) return estado
       const nueva = { ...actual, ...accion.cambios, id: actual.id }
-      if (!tareaValida(nueva, estado.members)) return estado
-      return { ...estado, tasks: estado.tasks.map((t) => (t.id === actual.id ? nueva : t)) }
+      const tasks = estado.tasks.map((t) => (t.id === actual.id ? nueva : t))
+      if (!tareaValida(nueva, estado.members) || !dependenciasValidas(tasks)) return estado
+      return { ...estado, tasks }
     }
-    case 'reassignTask': {
-      const actual = estado.tasks.find((t) => t.id === accion.id)
-      if (!actual || actual.ownerId === accion.ownerId || !estado.members.some((m) => m.id === accion.ownerId)) return estado
-      const texto = `${actual.title} pasó de ${nombreDe(estado, actual.ownerId)} a ${nombreDe(estado, accion.ownerId)} (cambio manual)`
-      const tasks = estado.tasks.map((t) => (t.id === actual.id ? { ...t, ownerId: accion.ownerId } : t))
-      return anotar(estado, { ...estado, tasks }, accion.hora, texto)
+    case 'reassignTask':
+      return reasignar(estado, accion.id, accion.ownerId, accion.hora, 'cambio manual')
+    case 'applyRescueChange': {
+      const { change, hora } = accion
+      const actual = estado.tasks.find((t) => t.id === change.taskId)
+      if (!actual || actual.ownerId !== change.fromMemberId) return estado
+      return reasignar(estado, change.taskId, change.toMemberId, hora, 'plan de rescate')
     }
     case 'removeTask':
       // Una tarea con archivos entregados no se borra: se perdería trabajo real del equipo.
       if (estado.files.some((f) => f.taskId === accion.id)) return estado
-      return { ...estado, tasks: estado.tasks.filter((t) => t.id !== accion.id) }
+      return {
+        ...estado,
+        tasks: estado.tasks
+          .filter((t) => t.id !== accion.id)
+          .map((t) => (t.dependsOn?.includes(accion.id) ? { ...t, dependsOn: t.dependsOn.filter((d) => d !== accion.id) } : t)),
+      }
     case 'acceptProposal': {
       const { proposal, hora } = accion
       try {

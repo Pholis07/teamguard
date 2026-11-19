@@ -1,4 +1,10 @@
-export type Member = { id: string; name: string; availableHours: number }
+export type Member = {
+  id: string
+  name: string
+  availableHours: number
+  /** Habilidades declaradas (opcional): las usa el plan de rescate. */
+  skills?: string[]
+}
 
 export type Task = {
   id: string
@@ -9,6 +15,10 @@ export type Task = {
   /** Fecha de calendario YYYY-MM-DD. */
   dueDate: string
   requiresFile: boolean
+  /** Ids de las tareas que deben terminar antes (opcional). */
+  dependsOn?: string[]
+  /** Habilidad que requiere (opcional). */
+  skill?: string
 }
 
 export type Absence = {
