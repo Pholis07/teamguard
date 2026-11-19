@@ -47,7 +47,7 @@ export function GuiaPresentacion({ paso, onIr, onSalir, extra }: Props) {
       <div className="guia-barra" aria-hidden="true">
         <span style={{ width: `${Math.min(100, (segundos / 60) * 100)}%` }} />
       </div>
-      <p className="guia-decir serif" aria-live="polite">«{actual.decir}»</p>
+      <p className="guia-decir" aria-live="polite">«{actual.decir}»</p>
       <p className="guia-hacer">{actual.hacer}</p>
       <div className="guia-acciones">
         {extra && <button className="btn guia-extra" onClick={extra.onClick}>{extra.label}</button>}

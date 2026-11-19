@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import qrcode from 'qrcode-generator'
+import { Icono } from './ui/bloques'
 import './compartir.css'
 
 // shortcut: URL fija de producción en Vercel; si cambia el dominio, actualizarla aquí.
@@ -40,8 +41,8 @@ export function Compartir() {
 
   return (
     <>
-      <button className="btn btn-s" onClick={() => { setCopia(''); dialogo.current?.showModal() }}>
-        Abrir en el celular
+      <button type="button" className="btn btn-s n-compartir" aria-label="Compartir: abrir en el celular" onClick={() => { setCopia(''); dialogo.current?.showModal() }}>
+        <Icono nombre="compartir" tam={14} /><span className="n-acc-t">Compartir</span>
       </button>
       <dialog
         ref={dialogo}
@@ -49,7 +50,7 @@ export function Compartir() {
         aria-labelledby="h-compartir"
         onClick={(e) => e.target === dialogo.current && dialogo.current.close()}
       >
-        <h2 id="h-compartir">Ábrela en tu celular</h2>
+        <h2 id="h-compartir" className="compartir-h">Ábrela en tu celular</h2>
         <p className="fa">Escanea el código con la cámara. Usa datos de ejemplo.</p>
         <Qr texto={URL_PUBLICA} />
         <p className="num compartir-url">{URL_PUBLICA.replace('https://', '')}</p>

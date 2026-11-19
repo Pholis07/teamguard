@@ -1,7 +1,8 @@
-.compartir { width: min(360px, calc(100vw - 32px)); padding: 24px; color: var(--ink); text-align: center; }
-.compartir::backdrop { background: rgba(4, 5, 6, .55); }
-.compartir h2 { margin-bottom: 6px; }
-.compartir p { margin: 0; font-size: 13px; }
-.compartir .qr { display: block; width: 100%; max-width: 240px; margin: 18px auto 12px; border-radius: 10px; }
-.compartir-url { font-size: 14px !important; color: var(--ink); overflow-wrap: anywhere; }
+/* Compartir: diálogo con QR, en la piel de Notion (menú flotante). */
+.compartir { width: min(360px, calc(100vw - 32px)); padding: 24px; margin: auto; color: var(--tx); background: var(--bg); border: 1px solid var(--bd); border-radius: 8px; box-shadow: var(--pop); text-align: center; font-family: var(--fuente); }
+.compartir::backdrop { background: rgba(0, 0, 0, .5); }
+.compartir-h { margin-bottom: 6px; font-size: 1.25em; font-weight: 600; }
+.compartir p { margin: 0; font-size: 14px; color: var(--tx2); }
+.compartir .qr { display: block; width: 100%; max-width: 240px; margin: 18px auto 12px; border-radius: 6px; }
+.compartir .compartir-url { font-size: 14px; color: var(--tx); overflow-wrap: anywhere; }
 .compartir-acciones { display: flex; justify-content: center; gap: 8px; margin-top: 18px; }
