@@ -7,6 +7,7 @@ import {
   type CoverageProposal,
   type RuleContext,
 } from './domain'
+import { Compartir } from './Compartir'
 import { EntregaVista } from './delivery/EntregaVista'
 import type { Decision } from './delivery/acta'
 import { progresoEntrega, type Entrega } from './delivery/zip'
@@ -178,6 +179,7 @@ export default function App() {
           <span className="fa">/</span>
           <span>{VISTAS[vista].label}</span>
           <span className="acciones">
+            <Compartir />
             <button className="btn btn-s" aria-pressed={oscuro} onClick={() => setOscuro(!oscuro)}>
               {oscuro ? 'Tema claro' : 'Tema oscuro'}
             </button>
