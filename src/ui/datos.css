@@ -1,0 +1,32 @@
+/* Bases de datos editables: Integrantes y Tareas */
+.dt-celda { position: relative; min-width: 0; }
+.dt-nombre { display: flex; align-items: center; gap: 4px; min-width: 0; padding-left: 4px; }
+.dt-nombre .cel { min-width: 90px; }
+.dt-celda .cel[type="date"] { min-width: 130px; color-scheme: dark; font-family: inherit; }
+:root[data-tema="claro"] .dt-celda .cel[type="date"] { color-scheme: light; }
+.dt-celda .cel.num { min-width: 56px; }
+.dt-cuenta { color: var(--tx2); }
+.dt-error { margin: 0; padding: 2px 6px 4px; font-size: 12px; line-height: 1.3; color: var(--tag-rojo-tx); background: var(--tag-rojo-bg); border-radius: 4px; }
+.dt-error[hidden] { display: none; }
+.dt-celda .dt-error { position: absolute; z-index: 2; left: 0; top: calc(100% - 3px); min-width: 180px; max-width: 260px; box-shadow: var(--pop, 0 2px 8px rgba(0, 0, 0, .3)); }
+.dt-pista { color: var(--tx3); font-size: 13px; }
+.dt-carga { display: flex; align-items: center; gap: 8px; }
+.dt-carga > :first-child { flex: 1; min-width: 0; }
+.dt-borrar { flex: none; width: 28px; height: 28px; padding: 0; opacity: 0; margin-left: auto; }
+.dt-fila:hover .dt-borrar, .dt-fila:focus-within .dt-borrar, .dt-borrar:focus-visible { opacity: 1; }
+.dt-borrar:focus-visible { outline: 2px solid var(--ac); outline-offset: 1px; }
+@media (hover: none) { .dt-borrar { opacity: 1; } }
+.dt-borrador { background: var(--hover); }
+.dt-estado { position: relative; display: inline-flex; align-items: center; height: 30px; padding: 0 2px; border-radius: 4px; cursor: pointer; }
+.dt-estado:hover { background: var(--hover); }
+.dt-estado:focus-within { box-shadow: 0 0 0 2px var(--ac); }
+.dt-estado .tag { pointer-events: none; }
+.dt-estado-sel { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; font-size: 14px; }
+.dt-check { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; color: var(--tx2); cursor: pointer; }
+.dt-check input { width: 16px; height: 16px; margin: 0; accent-color: var(--ac); cursor: pointer; }
+.dt-check input:focus-visible { outline: 2px solid var(--ac); outline-offset: 2px; }
+.dt-callout-p { margin: 0 0 8px; }
+.dt-nota { margin: 0; color: var(--tx3); font-size: 13px; }
+.n-tabla:has(.dt-fila) { min-width: 700px; }
+.dt-celda .cel:not(.num):not([type="date"]) { min-width: 130px; }
+.dt-celda .cel[type="date"] { min-width: 118px; }

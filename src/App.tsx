@@ -1,140 +1,93 @@
-import { useReducer, useState, type Dispatch, type ReactNode } from 'react'
-import {
-  confirmProposal,
-  createDemoState,
-  DEMO_DATE,
-  type Absence,
-  type CoverageProposal,
-  type RuleContext,
-} from './domain'
+import { useEffect, useReducer, useState } from 'react'
 import { EntregaVista } from './delivery/EntregaVista'
-import type { Entrega } from './delivery/zip'
+import { contextoDe, estadoInicial, reducer } from './ui/estado'
+import type { PaginaId, Tema } from './ui/formato'
+import { Shell } from './ui/Shell'
+import { Inicio } from './ui/Inicio'
+import { TableroVista } from './ui/TableroVista'
+import { IntegrantesVista } from './ui/IntegrantesVista'
+import { TareasVista } from './ui/TareasVista'
+import { ContingenciaVista } from './ui/ContingenciaVista'
 
-// Estado compartido. Las cargas no se guardan: las calcula B a partir de aquí.
-type Estado = ReturnType<typeof createDemoState> & { files: Entrega[] }
+const CLAVE_TEMA = 'tg-tema'
 
-// Simular, editar y rechazar no pasan por aquí: solo aceptar cambia ownerId.
-type Accion =
-  | { type: 'acceptProposal'; proposal: CoverageProposal }
-  | { type: 'setAbsence'; absence: Absence | null }
-  | { type: 'addFile'; entrega: Entrega }
-  | { type: 'reset' }
-
-const estadoInicial = (): Estado => ({ ...createDemoState(), files: [] })
-
-const contextoDe = (estado: Estado): RuleContext => ({
-  members: estado.members,
-  tasks: estado.tasks,
-  absences: estado.absence ? [estado.absence] : [],
-  asOf: DEMO_DATE,
-})
-
-function reducer(estado: Estado, accion: Accion): Estado {
-  switch (accion.type) {
-    case 'acceptProposal':
-      try {
-        return { ...estado, tasks: confirmProposal(contextoDe(estado), accion.proposal) }
-      } catch (error) {
-        // Propuesta obsoleta (p. ej. doble clic en Aceptar): se ignora en vez de tumbar la app.
-        console.warn(error)
-        return estado
-      }
-    case 'setAbsence':
-      return { ...estado, absence: accion.absence }
-    case 'addFile':
-      return { ...estado, files: [...estado.files, accion.entrega] }
-    case 'reset':
-      return estadoInicial()
+function temaGuardado(): Tema {
+  try {
+    return localStorage.getItem(CLAVE_TEMA) === 'claro' ? 'claro' : 'oscuro'
+  } catch {
+    return 'oscuro'
   }
 }
 
-type VistaProps = { estado: Estado; contexto: RuleContext; dispatch: Dispatch<Accion> }
-
-type Vista = 'tablero' | 'contingencia' | 'entrega'
-
-// Iconos del mockup v4 (trazos Lucide).
-const icono = (d: ReactNode) => (
-  <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-    {d}
-  </svg>
-)
-
-const VISTAS: Record<Vista, { label: string; icon: ReactNode; render: (props: VistaProps) => ReactNode }> = {
-  tablero: {
-    label: 'Tablero',
-    icon: icono(<><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>),
-    render: () => <p className="fa">Tablero · pantalla en construcción (A).</p>,
-  },
-  contingencia: {
-    label: 'Contingencia',
-    icon: icono(<><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="4" /><path d="m4.93 4.93 4.24 4.24" /><path d="m14.83 9.17 4.24-4.24" /><path d="m14.83 14.83 4.24 4.24" /><path d="m9.17 14.83-4.24 4.24" /></>),
-    render: () => <p className="fa">Contingencia · pantalla en construcción (A + B).</p>,
-  },
-  entrega: {
-    label: 'Entrega',
-    icon: icono(<><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" /><path d="m3.3 7 8.7 5 8.7-5" /><path d="M12 22V12" /></>),
-    render: ({ estado, dispatch }) => (
-      <EntregaVista
-        tasks={estado.tasks}
-        members={estado.members}
-        files={estado.files}
-        onAddFile={(entrega) => dispatch({ type: 'addFile', entrega })}
-      />
-    ),
-  },
-}
-
 export default function App() {
-  const [vista, setVista] = useState<Vista>('tablero')
+  const [pagina, setPagina] = useState<PaginaId>('tablero')
+  const [tema, setTema] = useState<Tema>(temaGuardado)
   const [estado, dispatch] = useReducer(reducer, undefined, estadoInicial)
 
+  useEffect(() => {
+    document.documentElement.dataset.tema = tema
+    try {
+      localStorage.setItem(CLAVE_TEMA, tema)
+    } catch {
+      // Sin almacenamiento: el tema solo dura esta sesión.
+    }
+  }, [tema])
+
+  const alternarTema = () => setTema((t) => (t === 'oscuro' ? 'claro' : 'oscuro'))
+
+  if (estado.fase === 'inicio' || !estado.proyecto) {
+    return (
+      <Inicio
+        tema={tema}
+        onTema={alternarTema}
+        onEmpezar={(nombre) => {
+          setPagina('tablero')
+          dispatch({ type: 'iniciar', nombre })
+        }}
+        onEjemplo={() => {
+          setPagina('tablero')
+          dispatch({ type: 'cargarEjemplo' })
+        }}
+      />
+    )
+  }
+
+  const { proyecto, members, tasks } = estado
+  const contexto = contextoDe(estado)
+
   return (
-    <div className="shell">
-      <aside className="side">
-        <div className="marca serif">
-          <img src="/brand/tigre-blanco.png" alt="" width="30" height="30" />
-          TeamGuard
-        </div>
-        <p className="lbl">Proyecto</p>
-        <nav className="sn" aria-label="Secciones">
-          {(Object.keys(VISTAS) as Vista[]).map((id) => (
-            <button
-              key={id}
-              aria-current={vista === id ? 'page' : undefined}
-              onClick={() => setVista(id)}
-            >
-              {VISTAS[id].icon}
-              {VISTAS[id].label}
-            </button>
-          ))}
-        </nav>
-        <p className="lbl">Integrantes</p>
-        <div className="miembros">
-          {estado.members.map((m, i) => (
-            <span key={m.id}>
-              <span className={`av av-s av${i + 1}`}>{m.name[0]}</span>
-              {m.name}
-            </span>
-          ))}
-        </div>
-        <div className="relleno" />
-        <p className="lema serif">
-          El trabajo es de todos.
-          <br />
-          <em>La responsabilidad también.</em>
-        </p>
-        <p className="demo">DATOS DE EJEMPLO</p>
-      </aside>
-      <div className="sheet">
-        <div className="topbar">
-          <span className="fa">Proyecto final</span>
-          <span className="fa">/</span>
-          <span>{VISTAS[vista].label}</span>
-        </div>
-        <main className="contenido">
-          {VISTAS[vista].render({ estado, contexto: contextoDe(estado), dispatch })}
-        </main>
-      </div>
-    </div>
+    <Shell
+      pagina={pagina}
+      proyecto={proyecto}
+      contadores={{ integrantes: members.length, tareas: tasks.length }}
+      tema={tema}
+      onNavegar={setPagina}
+      onTema={alternarTema}
+      onInicio={() => dispatch({ type: 'salir' })}
+      onReiniciar={() => {
+        setPagina('tablero')
+        dispatch({ type: 'reset' })
+      }}
+    >
+      {pagina === 'tablero' && <TableroVista proyecto={proyecto.nombre} members={members} tasks={tasks} onIr={setPagina} />}
+      {pagina === 'integrantes' && <IntegrantesVista members={members} tasks={tasks} dispatch={dispatch} />}
+      {pagina === 'tareas' && <TareasVista members={members} tasks={tasks} dispatch={dispatch} />}
+      {pagina === 'contingencia' && (
+        <ContingenciaVista
+          contexto={contexto}
+          absence={estado.absence}
+          onSetAbsence={(absence) => dispatch({ type: 'setAbsence', absence })}
+          onAccept={(proposal) => dispatch({ type: 'acceptProposal', proposal })}
+        />
+      )}
+      {pagina === 'entrega' && (
+        <EntregaVista
+          tasks={tasks}
+          members={members}
+          files={estado.files}
+          onAddFile={(entrega) => dispatch({ type: 'addFile', entrega })}
+        />
+      )}
+    </Shell>
   )
 }

@@ -1,4 +1,4 @@
-import type { Member } from '../domain'
+import type { Member, Task } from '../domain'
 
 /* Formato: las cifras se redondean solo al mostrarlas. */
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
@@ -11,3 +11,34 @@ export const pct = (p: number | null) => (p === null ? '—' : `${Math.round(p)}
 export const plural = (n: number, uno: string, varios: string) => (n === 1 ? uno : varios)
 
 export const miembroPorId = (members: readonly Member[], id: string) => members.find((m) => m.id === id)
+
+/* Páginas de la app (barra lateral y migas). */
+export type PaginaId = 'tablero' | 'integrantes' | 'tareas' | 'contingencia' | 'entrega'
+export const PAGINAS: readonly { id: PaginaId; emoji: string; label: string }[] = [
+  { id: 'tablero', emoji: '📋', label: 'Tablero' },
+  { id: 'integrantes', emoji: '👥', label: 'Integrantes' },
+  { id: 'tareas', emoji: '✅', label: 'Tareas' },
+  { id: 'contingencia', emoji: '🛟', label: 'Contingencia' },
+  { id: 'entrega', emoji: '📦', label: 'Entrega' },
+]
+
+export type Tema = 'oscuro' | 'claro'
+export type Proyecto = { nombre: string; ejemplo: boolean }
+
+/* Colores de etiqueta de Notion y sus usos fijos. */
+export type ColorEtiqueta = 'gris' | 'cafe' | 'naranja' | 'amarillo' | 'verde' | 'azul' | 'morado' | 'rosa' | 'rojo'
+export const ESTADO_TAREA: Record<Task['status'], { texto: string; color: ColorEtiqueta }> = {
+  pending: { texto: 'Pendiente', color: 'gris' },
+  active: { texto: 'En progreso', color: 'azul' },
+  done: { texto: 'Completada', color: 'verde' },
+}
+export const COLOR_RIESGO = { Bajo: 'verde', Medio: 'amarillo', Alto: 'rojo' } as const satisfies Record<string, ColorEtiqueta>
+
+/* Validación previa a enviar datos al dominio (que lanza Error con datos inválidos). */
+export const nombreValido = (s: string) => s.trim().length > 0
+export const horasValidas = (h: number) => Number.isFinite(h) && h >= 0
+export function fechaValida(iso: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false
+  const d = new Date(`${iso}T00:00:00Z`)
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === iso
+}
