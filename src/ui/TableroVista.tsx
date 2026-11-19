@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTextos } from './version'
 import { calculateLoads, isTaskOverdue, simulateAssignment, type Member, type RuleContext, type Task } from '../domain'
 import { serieEquilibrio, type Decision } from '../delivery/acta'
 import type { Entrega } from '../delivery/zip'
@@ -33,6 +34,7 @@ function Avatar({ member, members, chico }: { member: Member; members: readonly 
 }
 
 export function TableroVista({ proyecto, members, tasks, files, contexto, decisiones, onIr }: Props) {
+  const t = useTextos()
   const abiertas = tasks.filter((t) => t.status !== 'done')
   const [sim, setSim] = useState<{ taskId: string; candidateId: string } | null>(null)
   const [simulado, setSimulado] = useState(leerSimulo)
@@ -49,15 +51,15 @@ export function TableroVista({ proyecto, members, tasks, files, contexto, decisi
     const pasos = [members.length > 0, tasks.length > 0, simulado].filter(Boolean).length
     return (
       <Pagina icono="tablero" titulo={`Bienvenido a ${proyecto}`}>
-        <p className="p-parr">Aquí verás quién carga cuánto trabajo y si alguien se pasa de su disponibilidad. Empieza con tres pasos.</p>
+        <p className="p-parr">{t.bienvenida}</p>
         <p className="p-progreso num" aria-live="polite">{pasos} de 3 pasos</p>
         <Checklist items={[
-          { texto: 'Agrega integrantes', hecho: members.length > 0, accion: { texto: 'Ir a Integrantes', onClick: () => onIr('integrantes') } },
+          { texto: t.agregaIntegrantes, hecho: members.length > 0, accion: { texto: `Ir a ${t.integrantes}`, onClick: () => onIr('integrantes') } },
           { texto: 'Crea tareas', hecho: tasks.length > 0, accion: { texto: 'Ir a Tareas', onClick: () => onIr('tareas') } },
           { texto: 'Simula una asignación', hecho: simulado },
         ]} />
         <Toggle titulo="¿Qué es la carga?">
-          <p className="p-parr">Es la suma de horas de tus tareas abiertas frente a las horas que tienes disponibles. Al 100 % vas justo; arriba de eso hay sobrecarga y conviene repartir distinto.</p>
+          <p className="p-parr">{t.ayudaCarga}</p>
         </Toggle>
       </Pagina>
     )
@@ -110,14 +112,14 @@ export function TableroVista({ proyecto, members, tasks, files, contexto, decisi
       propiedades={
         <Propiedades items={[
           { icono: 'escudo', etiqueta: 'Equilibrio', valor: (
-            <span className="num" title="Porcentaje de las horas abiertas que caben en el tiempo real de su responsable">
+            <span className="num n-eqn" title="Porcentaje de las horas abiertas que caben en el tiempo real de su responsable">
               {eqSim && eqSim.indice !== eq.indice ? <>{eq.indice} → <b>{eqSim.indice}</b></> : eq.indice}/100
               <span className="fa"> · {horas((eqSim ?? eq).caben)} de {horas((eqSim ?? eq).total)} h caben</span>
             </span>
           ) },
           { icono: 'estado', etiqueta: 'Riesgo', valor: <Etiqueta color={COLOR_RIESGO[eq.riesgo]}>{eq.riesgo}</Etiqueta> },
           { icono: 'calendario', etiqueta: 'Entrega', valor: entrega ? fecha(entrega) : '—' },
-          { icono: 'personas', etiqueta: 'Integrantes', valor: (
+          { icono: 'personas', etiqueta: t.integrantes, valor: (
             <span className="p-persona">
               <span className="p-pila">{members.map((m) => <Avatar key={m.id} member={m} members={members} />)}</span>
               <span className="fa num">{members.length}</span>
@@ -178,9 +180,9 @@ export function TableroVista({ proyecto, members, tasks, files, contexto, decisi
       )}
 
       <BaseDeDatos
-        titulo="Carga del equipo"
+        titulo={t.cargaEquipo}
         columnas={[
-          { icono: 'persona', nombre: 'Integrante' },
+          { icono: 'persona', nombre: t.integrante },
           { icono: 'texto', nombre: 'Tareas abiertas' },
           { icono: 'numero', nombre: 'Horas' },
           { icono: 'estado', nombre: 'Carga' },

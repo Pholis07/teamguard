@@ -1,3 +1,4 @@
+import { useTextos } from './version'
 import { useEffect, useRef, type Dispatch } from 'react'
 import type { Member, Task } from '../domain'
 import type { Entrega } from '../delivery/zip'
@@ -21,6 +22,7 @@ const leerHoras = (s: string) => (s.trim() === '' ? NaN : Number(s.trim().replac
 const FECHA_INICIAL = '2026-11-20'
 
 export function TareasVista({ members, tasks, files, dispatch, onIr }: Props) {
+  const t = useTextos()
   const nuevaRef = useRef<HTMLInputElement | null>(null)
   const esperando = useRef(false)
 
@@ -50,11 +52,11 @@ export function TareasVista({ members, tasks, files, dispatch, onIr }: Props) {
     >
       {members.length === 0 ? (
         <Callout icono="info">
-          <p className="dt-callout-p">Para crear tareas primero agrega a quienes las harán.</p>
-          {onIr && <button type="button" className="btn btn-s" onClick={() => onIr('integrantes')}><Icono nombre="integrantes" tam={14} />Ir a Integrantes</button>}
+          <p className="dt-callout-p">{t.primeroIntegrantes}</p>
+          {onIr && <button type="button" className="btn btn-s" onClick={() => onIr('integrantes')}><Icono nombre="integrantes" tam={14} />Ir a {t.integrantes}</button>}
         </Callout>
       ) : tasks.length === 0 && (
-        <Callout icono="info">Crea la primera tarea para ver cómo se reparte la carga del equipo.</Callout>
+        <Callout icono="info">{t.vacioTareas}</Callout>
       )}
       <BaseDeDatos
         columnas={[

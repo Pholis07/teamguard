@@ -22,7 +22,7 @@
 .dt-estado .tag { pointer-events: none; }
 .dt-estado-sel { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; font-size: 14px; }
 .dt-check { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; color: var(--tx2); cursor: pointer; }
-.dt-check input { width: 16px; height: 16px; margin: 0; accent-color: var(--ac); cursor: pointer; }
+.dt-check input { width: 16px; height: 16px; margin: 0; accent-color: var(--gr); cursor: pointer; }
 .dt-check input:focus-visible { outline: 2px solid var(--ac); outline-offset: 2px; }
 .dt-callout-p { margin: 0 0 8px; }
 .dt-nota { margin: 0; color: var(--tx3); font-size: 13px; }

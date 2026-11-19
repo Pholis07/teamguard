@@ -11,16 +11,16 @@
 .guia-reloj span { color: var(--tx2); }
 .guia-reloj.tarde { color: var(--tag-naranja-tx); }
 .guia-barra { height: 4px; margin: 10px 0 12px; border-radius: 2px; background: var(--sel); overflow: hidden; }
-.guia-barra span { display: block; height: 100%; background: var(--ac); transition: width .25s linear; }
+.guia-barra span { display: block; height: 100%; background: var(--gr); transition: width .25s linear; }
 .guia-decir { margin: 0; font-size: 18px; font-weight: 600; line-height: 1.35; }
 .guia-hacer { margin: 10px 0 0; color: var(--tx2); }
 .guia-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
 .guia-espacio { flex: 1; }
-.guia-pri { background: var(--ac); color: var(--ac-on); }
+.guia-pri { background: var(--gr); color: var(--gr-on); }
 .guia-pri:hover { filter: brightness(.88); }
 .guia-sec { border-color: var(--bd); color: var(--tx); }
 .guia-sec:hover:not(:disabled) { background: var(--hover); }
-.guia-extra { flex-basis: 100%; background: var(--ac-bg); color: var(--ac-tx); }
+.guia-extra { flex-basis: 100%; background: var(--gr-bg); color: var(--gr-tx); }
 .guia-extra:hover { background: var(--sel); }
 .guia-salir { position: absolute; top: 10px; right: 12px; width: 24px; height: 24px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 6px; background: none; color: var(--tx2); font-size: 18px; line-height: 1; cursor: pointer; }
 .guia-salir:hover { color: var(--tx); background: var(--hover); }

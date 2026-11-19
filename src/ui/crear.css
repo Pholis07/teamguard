@@ -16,3 +16,5 @@
 @keyframes ce-entra { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .ce-tarjeta { animation: none; } }
 @media (max-width: 760px) { .ce-tarjeta { padding: 24px 20px; } }
+
+.ce-acento { display: flex; align-items: center; gap: 12px; color: var(--tx2); font-size: 14px; }

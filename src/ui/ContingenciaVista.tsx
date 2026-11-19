@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTextos } from './version'
 import {
   DEMO_DATE, calculateLoads, getCoverageCandidates, getTasksNeedingCoverage, proposeCoverage, rejectProposal,
   type Absence, type CoverageProposal, type Member, type RuleContext,
@@ -30,6 +31,7 @@ const sumarDias = (iso: string, dias: number) => {
 }
 
 export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }: Props) {
+  const t = useTextos()
   const { members, tasks } = contexto
   const [modo, setModo] = useState<Modo>('propuesta')
   const [candidato, setCandidato] = useState<string | undefined>(undefined)
@@ -63,7 +65,7 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
   function registrar(e: React.FormEvent) {
     e.preventDefault()
     const memberId = quien || members[0]?.id
-    if (!memberId) return setError('Primero agrega integrantes en Integrantes.')
+    if (!memberId) return setError(`Primero agrega ${t.integrantesMin} en ${t.integrantes}.`)
     if (!fechaValida(desde) || !fechaValida(hasta)) return setError('Elige fechas válidas.')
     if (hasta < desde) return setError('«Hasta» no puede ser antes que «Desde».')
     setError('')
@@ -123,10 +125,10 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
       <Pagina icono="contingencia" titulo="Contingencia">
         <p className="p-estado">Nadie está ausente.<span className="fa">Si alguien no puede trabajar unos días, regístralo y TeamGuard propone quién cubre.</span></p>
         {confirmacion}
-        {sinGente && <Callout icono="info" tono="amarillo" rol="status"><p className="p-parr">Todavía no hay integrantes. Agrégalos en Integrantes para registrar una ausencia.</p></Callout>}
+        {sinGente && <Callout icono="info" tono="amarillo" rol="status"><p className="p-parr">Todavía no hay {t.integrantesMin}. Agrégalos en {t.integrantes} para registrar una ausencia.</p></Callout>}
         <Callout icono="ausencia">
           <form className="p-campos" onSubmit={registrar} noValidate>
-            <label className="p-campo">Integrante
+            <label className="p-campo">{t.integrante}
               <select className="p-select" value={quien || members[0]?.id || ''} onChange={(e) => setQuien(e.target.value)} disabled={sinGente}>
                 {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
               </select>

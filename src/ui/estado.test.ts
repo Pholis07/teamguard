@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 import { DEMO_ABSENCE, proposeCoverage } from '../domain'
+import { equilibrio } from './equilibrio'
 import { contextoDe, reducer, estadoInicial, type Estado } from './estado'
 
 const ejemplo = (): Estado => reducer(estadoInicial(), { type: 'cargarEjemplo' })
@@ -30,4 +31,16 @@ test('cada decisión guarda el equilibrio de antes y de después', () => {
   const propuesta = proposeCoverage(contextoDe(conAusencia), 't1').proposal!
   const cubierta = reducer(conAusencia, { type: 'acceptProposal', proposal: propuesta, hora: '11:41' })
   expect(cubierta.decisiones.map((d) => d.equilibrio)).toEqual([{ antes: 100, despues: 57 }, { antes: 57, despues: 100 }])
+})
+
+test('la versión nombra el ejemplo, se conserva al reiniciar y no toca los datos', () => {
+  const emp = reducer(estadoInicial(), { type: 'setVersion', version: 'empresas' })
+  const e = reducer(emp, { type: 'cargarEjemplo' })
+  expect(e.proyecto).toEqual({ nombre: 'Campaña Q4 (ejemplo)', ejemplo: true })
+  expect(e.tasks).toEqual(ejemplo().tasks)
+  expect(e.members.map((m) => m.name)).toEqual(['Ana', 'Luis', 'Sol'])
+  expect(equilibrio(contextoDe(e)).indice).toBe(100)
+  expect(reducer(e, { type: 'reset' }).version).toBe('empresas')
+  expect(ejemplo().proyecto!.nombre).toBe('Proyecto final (ejemplo)')
+  expect(reducer(emp, { type: 'setVersion', version: 'empresas' })).toBe(emp)
 })

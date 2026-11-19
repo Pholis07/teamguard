@@ -1,11 +1,12 @@
-import { useEffect, useReducer, useState } from 'react'
+import { useEffect, useReducer, useState, type ReactNode } from 'react'
 import { Compartir } from './Compartir'
 import { PASOS } from './guion'
 import { GuiaPresentacion } from './Presentar'
 import { EntregaVista } from './delivery/EntregaVista'
 import { progresoEntrega } from './delivery/zip'
 import { contextoDe, estadoInicial, reducer } from './ui/estado'
-import { ahora, type PaginaId, type Tema } from './ui/formato'
+import { acentoGuardado, ahora, aplicarAcento, guardarAcento, type Acento, type PaginaId, type Tema } from './ui/formato'
+import { ACENTO_SUGERIDO, guardarVersion, irAVersion, versionDeHash, versionGuardada, VersionContext, type Version } from './ui/version'
 import { Icono } from './ui/bloques'
 import { Shell } from './ui/Shell'
 import { Inicio } from './ui/Inicio'
@@ -28,7 +29,10 @@ function temaGuardado(): Tema {
 export default function App() {
   const [pagina, setPagina] = useState<PaginaId>('tablero')
   const [tema, setTema] = useState<Tema>(temaGuardado)
-  const [estado, dispatch] = useReducer(reducer, undefined, estadoInicial)
+  // Acento elegido de forma explícita; mientras sea null se sugiere uno según la versión.
+  const [elegido, setElegido] = useState<Acento | null>(acentoGuardado)
+  const [estado, dispatch] = useReducer(reducer, undefined, () => estadoInicial(versionGuardada()))
+  const acento = elegido ?? ACENTO_SUGERIDO[estado.version]
   // Demo guiada: null = sin presentar; si no, índice en PASOS.
   const [paso, setPaso] = useState<number | null>(null)
 
@@ -40,6 +44,28 @@ export default function App() {
       // Sin almacenamiento: el tema solo dura esta sesión.
     }
   }, [tema])
+
+  useEffect(() => aplicarAcento(acento), [acento])
+  useEffect(() => guardarVersion(estado.version), [estado.version])
+  const setAcento = (a: Acento) => {
+    guardarAcento(a)
+    setElegido(a)
+  }
+  // Landing por hash (#/estudiantes, #/empresas): la versión sale de la URL y, sin ella, de la última guardada.
+  useEffect(() => {
+    const desdeHash = () => {
+      const v = versionDeHash(window.location.hash)
+      if (v) dispatch({ type: 'setVersion', version: v })
+    }
+    if (!versionDeHash(window.location.hash)) window.history.replaceState(null, '', `#/${versionGuardada()}`)
+    else desdeHash()
+    window.addEventListener('hashchange', desdeHash)
+    return () => window.removeEventListener('hashchange', desdeHash)
+  }, [])
+  const cambiarVersion = (version: Version) => {
+    irAVersion(version)
+    dispatch({ type: 'salir' })
+  }
 
   const alternarTema = () => setTema((t) => (t === 'oscuro' ? 'claro' : 'oscuro'))
 
@@ -65,11 +91,16 @@ export default function App() {
       ? { label: 'Completar el Resumen', onClick: () => muestra('t3', 'm3', 'resumen.txt', 'Resumen de Sol (ejemplo).') }
       : undefined
 
+  const conVersion = (n: ReactNode) => <VersionContext.Provider value={estado.version}>{n}</VersionContext.Provider>
+
   if (estado.fase === 'inicio') {
-    return (
+    return conVersion(
       <Inicio
         tema={tema}
         onTema={alternarTema}
+        acento={acento}
+        onAcento={setAcento}
+        version={estado.version}
         onEmpezar={() => {
           setPagina('tablero')
           dispatch({ type: 'entrar' })
@@ -83,9 +114,13 @@ export default function App() {
   }
 
   if (!estado.proyecto) {
-    return (
+    return conVersion(
       <CrearEspacio
         tema={tema}
+        acento={acento}
+        onAcento={setAcento}
+        version={estado.version}
+        onCambiarVersion={cambiarVersion}
         onCrear={(nombre) => {
           setPagina('tablero')
           dispatch({ type: 'iniciar', nombre })
@@ -103,12 +138,14 @@ export default function App() {
   const contexto = contextoDe(estado)
   const { listas, total } = progresoEntrega(tasks, estado.files)
 
-  return (
+  return conVersion(
     <Shell
       pagina={pagina}
       proyecto={proyecto}
       contadores={{ integrantes: members.length, tareas: tasks.length, entrega: tasks.length > 0 ? `${listas}/${total}` : undefined }}
       tema={tema}
+      acento={acento}
+      onAcento={setAcento}
       onNavegar={setPagina}
       onTema={alternarTema}
       onInicio={() => dispatch({ type: 'salir' })}

@@ -40,7 +40,7 @@
 .p-radio:hover { background: var(--hover); }
 .p-radio[data-no="true"] { cursor: not-allowed; color: var(--tx2); }
 .p-radio[data-no="true"]:hover { background: none; }
-.p-radio input { accent-color: var(--ac); margin: 0; }
+.p-radio input { accent-color: var(--gr); margin: 0; }
 @media (max-width: 760px) {
   .p-prop { padding: 16px; }
   .p-grande { font-size: 20px; }

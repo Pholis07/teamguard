@@ -1,12 +1,15 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Icono } from './bloques'
-import { PAGINAS, type PaginaId, type Proyecto, type Tema } from './formato'
+import { Icono, SelectorAcento } from './bloques'
+import { useTextos } from './version'
+import { PAGINAS, type PaginaId, type Acento, type Proyecto, type Tema } from './formato'
 
 type Props = {
   pagina: PaginaId
   proyecto: Proyecto
   contadores: { integrantes: number; tareas: number; entrega?: string }
   tema: Tema
+  acento: Acento
+  onAcento: (a: Acento) => void
   onNavegar: (pagina: PaginaId) => void
   onTema: () => void
   onInicio: () => void
@@ -17,8 +20,10 @@ type Props = {
 }
 
 /** Marco de la app: barra lateral de 240px, barra superior con migas y columna de página. En ≤760px la barra es un cajón. */
-export function Shell({ pagina, proyecto, contadores, tema, onNavegar, onTema, onInicio, onReiniciar, acciones, children }: Props) {
+export function Shell({ pagina, proyecto, contadores, tema, acento, onAcento, onNavegar, onTema, onInicio, onReiniciar, acciones, children }: Props) {
   const [abierto, setAbierto] = useState(false)
+  const t = useTextos()
+  const etiqueta = (p: (typeof PAGINAS)[number]) => (p.id === 'integrantes' ? t.pagina.integrantes : p.label)
   const actual = PAGINAS.find((p) => p.id === pagina)
   const cuentas: Partial<Record<PaginaId, number | string>> = { integrantes: contadores.integrantes, tareas: contadores.tareas, entrega: contadores.entrega }
 
@@ -50,7 +55,7 @@ export function Shell({ pagina, proyecto, contadores, tema, onNavegar, onTema, o
           {PAGINAS.map((p) => (
             <button key={p.id} type="button" className="n-item" aria-current={pagina === p.id ? 'page' : undefined} onClick={cerrandoAntes(() => onNavegar(p.id))}>
               <span className="n-item-e" aria-hidden="true"><Icono nombre={p.icono} /></span>
-              <span className="n-item-t">{p.label}</span>
+              <span className="n-item-t">{etiqueta(p)}</span>
               {cuentas[p.id] !== undefined && <span className="n-cuenta">{cuentas[p.id]}</span>}
             </button>
           ))}
@@ -60,7 +65,8 @@ export function Shell({ pagina, proyecto, contadores, tema, onNavegar, onTema, o
           <span className="n-item-e" aria-hidden="true"><Icono nombre={tema === 'oscuro' ? 'luna' : 'sol'} /></span>
           <span className="n-item-t">{tema === 'oscuro' ? 'Oscuro' : 'Claro'}</span>
         </button>
-        <p className="n-lema">El trabajo es de todos. La responsabilidad también.</p>
+        <div className="n-acento"><span>Acento</span><SelectorAcento acento={acento} onAcento={onAcento} /></div>
+        <p className="n-lema">{t.lema}</p>
         <button type="button" className="btn btn-g n-llat" onClick={cerrandoAntes(onReiniciar)}>Reiniciar demo</button>
       </aside>
       {abierto && <button type="button" className="n-velo" aria-label="Cerrar menú" onClick={() => setAbierto(false)} />}
@@ -70,7 +76,7 @@ export function Shell({ pagina, proyecto, contadores, tema, onNavegar, onTema, o
           <nav className="n-migas" aria-label="Ubicación">
             <span>{proyecto.nombre}</span>
             <span className="sep" aria-hidden="true">/</span>
-            <b aria-current="page">{actual && <Icono nombre={actual.icono} />}{actual?.label}</b>
+            <b aria-current="page">{actual && <Icono nombre={actual.icono} />}{actual && etiqueta(actual)}</b>
           </nav>
           <span className="n-top-der">
             <span className="n-estado">{proyecto.ejemplo ? 'Datos de ejemplo' : 'Proyecto nuevo'}</span>
