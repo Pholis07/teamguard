@@ -3,7 +3,7 @@ import {
   DEMO_DATE, calculateLoads, getCoverageCandidates, getTasksNeedingCoverage, proposeCoverage, rejectProposal,
   type Absence, type CoverageProposal, type Member, type RuleContext,
 } from '../domain'
-import { BarraCarga, Callout, Etiqueta, Icono, Pagina, Propiedades } from './bloques'
+import { BarraCarga, Callout, Cifra, Etiqueta, Icono, Pagina, Propiedades } from './bloques'
 import { equilibrio } from './equilibrio'
 import { COLOR_RIESGO, fecha, fechaValida, horas, miembroPorId, rango } from './formato'
 import './paginas.css'
@@ -35,7 +35,7 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
   const [candidato, setCandidato] = useState<string | undefined>(undefined)
   const [rechazados, setRechazados] = useState<string[]>([])
   const [aviso, setAviso] = useState('')
-  const [cubierta, setCubierta] = useState<{ tarea: string; quien: string; carga: string } | null>(null)
+  const [cubierta, setCubierta] = useState<{ tarea: string; quien: string; carga: string; antes: number; despues: number } | null>(null)
   const [quien, setQuien] = useState('')
   const [desde, setDesde] = useState(DEMO_DATE)
   const [hasta, setHasta] = useState(sumarDias(DEMO_DATE, 2))
@@ -77,7 +77,9 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
     const nueva = p.projectedLoads.find((c) => c.memberId === p.candidateId)
     const t = tasks.find((x) => x.id === p.taskId)
     if (persona && nueva && t) {
-      setCubierta({ tarea: t.title, quien: persona.name, carga: `${horas(nueva.assignedHours)} de ${horas(nueva.availableHours)} h` })
+      const antes = equilibrio(contexto).indice
+      const despues = equilibrio({ ...contexto, tasks: tasks.map((x) => (x.id === p.taskId ? { ...x, ownerId: p.candidateId } : x)) }).indice
+      setCubierta({ tarea: t.title, quien: persona.name, carga: `${horas(nueva.assignedHours)} de ${horas(nueva.availableHours)} h`, antes, despues })
     }
     reiniciar()
     onAccept(p)
@@ -113,6 +115,7 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
   const confirmacion = cubierta && (
     <Callout icono="check" tono="verde" rol="status">
       <p className="p-parr">{cubierta.tarea} ahora es de {cubierta.quien}. {cubierta.quien} queda en {cubierta.carga}.</p>
+      <p className="p-confirma num">Equilibrio {cubierta.antes} → <b><Cifra desde={cubierta.antes} valor={cubierta.despues} /></b>/100</p>
     </Callout>
   )
 

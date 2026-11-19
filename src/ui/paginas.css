@@ -64,3 +64,12 @@
 .p-campo input { border-width: 2px; border-color: var(--bd); }
 .p-campo input:focus, .p-campo input:focus-visible { outline: 0; border-color: var(--ac); }
 .p-progreso { color: var(--tx2); font-size: 14px; }
+/* Las barras de carga se deslizan a su nuevo valor (simular, aceptar). */
+.n-barra-fill, .n-barra-extra { transition: width .5s cubic-bezier(.2, .8, .2, 1), left .5s cubic-bezier(.2, .8, .2, 1); }
+@media (prefers-reduced-motion: reduce) { .n-barra-fill, .n-barra-extra { transition: none; } }
+/* Prueba de resiliencia */
+.r-lista { list-style: none; margin: 8px 0 0; padding: 0; border-top: 1px solid var(--bd); }
+.r-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; padding: 10px 2px; border-bottom: 1px solid var(--bd); font-size: 14px; }
+.r-fila > .p-persona { min-width: 140px; }
+.r-detalle { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; flex: 1; min-width: 0; }
+.p-confirma { margin: 6px 0 0; font-size: 18px; font-weight: 600; }

@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react'
 import { calculateLoads, isTaskOverdue, simulateAssignment, type Member, type RuleContext, type Task } from '../domain'
 import { serieEquilibrio, type Decision } from '../delivery/acta'
 import { GraficaEquilibrio } from './GraficaEquilibrio'
-import { BarraCarga, BaseDeDatos, Callout, Checklist, Etiqueta, Icono, Pagina, Propiedades, Toggle } from './bloques'
+import { Resiliencia } from './Resiliencia'
+import { BarraCarga, BaseDeDatos, Callout, Checklist, Cifra, Etiqueta, Icono, Pagina, Propiedades, Toggle } from './bloques'
 import { equilibrio } from './equilibrio'
 import { COLOR_RIESGO, ESTADO_TAREA, fecha, horas, miembroPorId, pct, plural, type PaginaId } from './formato'
 import './paginas.css'
@@ -107,7 +108,7 @@ export function TableroVista({ proyecto, members, tasks, contexto, decisiones, o
         <Propiedades items={[
           { icono: 'escudo', etiqueta: 'Equilibrio', valor: (
             <span className="num" title="Porcentaje de las horas abiertas que caben en el tiempo real de su responsable">
-              {eqSim && eqSim.indice !== eq.indice ? <>{eq.indice} → <b>{eqSim.indice}</b></> : eq.indice}/100
+              {eqSim && eqSim.indice !== eq.indice ? <>{eq.indice} → <b><Cifra desde={eq.indice} valor={eqSim.indice} /></b></> : eq.indice}/100
               <span className="fa"> · {horas((eqSim ?? eq).caben)} de {horas((eqSim ?? eq).total)} h caben</span>
             </span>
           ) },
@@ -165,6 +166,8 @@ export function TableroVista({ proyecto, members, tasks, contexto, decisiones, o
           </div>
         </Callout>
       )}
+
+      {members.length > 1 && <Resiliencia contexto={contexto} />}
 
       {decisiones.length > 0 && (
         <section className="n-bd">

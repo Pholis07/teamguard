@@ -1,4 +1,4 @@
-import { Children, type ReactNode } from 'react'
+import { Children, useEffect, useRef, useState, type ReactNode } from 'react'
 import { PAGINAS, horas, pct, type ColorEtiqueta } from './formato'
 
 /* Íconos: trazos Lucide en línea, un solo grosor (1.5) en toda la interfaz. */
@@ -129,6 +129,31 @@ export function Toggle({ titulo, abierto, children }: { titulo: ReactNode; abier
 }
 
 /** Etiqueta: siempre lleva texto (grises; rojo/naranja/amarillo = alerta). */
+/**
+ * Cifra que cuenta de `desde` a `valor` (y de un valor al siguiente cuando cambia). Sin animación si el
+ * sistema pide reducir movimiento; los lectores de pantalla oyen solo el valor final.
+ */
+export function Cifra({ valor, desde = valor }: { valor: number; desde?: number }) {
+  const quieto = () => matchMedia('(prefers-reduced-motion: reduce)').matches
+  const [mostrado, setMostrado] = useState(() => (quieto() ? valor : desde))
+  const actual = useRef(mostrado)
+  useEffect(() => {
+    const inicio = actual.current
+    const fijar = (n: number) => { actual.current = n; setMostrado(n) }
+    if (inicio === valor || quieto()) return fijar(valor)
+    const t0 = performance.now()
+    let id = 0
+    const paso = (t: number) => {
+      const k = Math.min(1, (t - t0) / 700)
+      fijar(Math.round(inicio + (valor - inicio) * (1 - (1 - k) ** 3)))
+      if (k < 1) id = requestAnimationFrame(paso)
+    }
+    id = requestAnimationFrame(paso)
+    return () => cancelAnimationFrame(id)
+  }, [valor])
+  return <span className="num"><span aria-hidden="true">{mostrado}</span><span className="sr-only">{valor}</span></span>
+}
+
 export function Etiqueta({ color, children }: { color: ColorEtiqueta; children: ReactNode }) {
   return <span className={`tag tag-${color}`}>{children}</span>
 }
