@@ -52,6 +52,10 @@ export default function App() {
   function irAPaso(n: number) {
     setPaso(n)
     setPagina(PASOS[n].vista)
+    // shortcut: dependencia de ejemplo con los IDs del caso común (Resumen t3 depende de Ficha t2); solo para la demo.
+    if (PASOS[n].preparaRescate && !estado.tasks.find((t) => t.id === 't3')?.dependsOn?.includes('t2')) {
+      dispatch({ type: 'updateTask', id: 't3', cambios: { dependsOn: ['t2'] } })
+    }
     if (PASOS[n].preparaEntregas) {
       muestra('t1', 'm1', 'boceto.txt', 'Boceto de Ana, subido antes de su ausencia (ejemplo).')
       muestra('t2', 'm2', 'ficha.txt', 'Ficha de Luis (ejemplo).')
