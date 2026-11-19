@@ -7,8 +7,8 @@ import {
   type CoverageProposal,
   type RuleContext,
 } from './domain'
-
-type Entrega = { taskId: string; uploaderId: string; file: File }
+import { EntregaVista } from './delivery/EntregaVista'
+import type { Entrega } from './delivery/zip'
 
 // Estado compartido. Las cargas no se guardan: las calcula B a partir de aquí.
 type Estado = ReturnType<typeof createDemoState> & { files: Entrega[] }
@@ -58,7 +58,17 @@ const VISTAS: Record<Vista, { label: string; render: (props: VistaProps) => Reac
     label: 'Contingencia',
     render: () => <p>Contingencia (A + B · src/ui, src/domain)</p>,
   },
-  entrega: { label: 'Entrega', render: () => <p>Entrega (C · src/delivery)</p> },
+  entrega: {
+    label: 'Entrega',
+    render: ({ estado, dispatch }) => (
+      <EntregaVista
+        tasks={estado.tasks}
+        members={estado.members}
+        files={estado.files}
+        onAddFile={(entrega) => dispatch({ type: 'addFile', entrega })}
+      />
+    ),
+  },
 }
 
 export default function App() {
