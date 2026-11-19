@@ -14,6 +14,9 @@ function Revela({ children, className = '', retraso = 0 }: { children: ReactNode
   useEffect(() => {
     const el = ref.current
     if (!el) return
+    const r = el.getBoundingClientRect()
+    // Sin IntersectionObserver, o si ya está en pantalla al cargar: se muestra sin esperar.
+    if (typeof IntersectionObserver === 'undefined' || (r.top < window.innerHeight && r.bottom > 0)) { setVisto(true); return }
     const obs = new IntersectionObserver((es) => {
       if (es.some((e) => e.isIntersecting)) { setVisto(true); obs.disconnect() }
     }, { threshold: 0.12 })
@@ -34,10 +37,11 @@ function IconoTema({ tema }: { tema: Tema }) {
 }
 
 const FILAS = [
-  { n: 'Ana', c: 'Diseño', w: 48, t: 'verde', e: 'Con holgura' },
-  { n: 'Luis', c: 'Programación', w: 82, t: 'naranja', e: 'Al límite' },
-  { n: 'Marta', c: 'Documentación', w: 100, t: 'rojo', e: 'Sobrecarga' },
+  { n: 'Ana', c: 'Boceto', w: 75, e: '1 h libre' },
+  { n: 'Luis', c: 'Ficha', w: 33, e: '4 h libres' },
+  { n: 'Sol', c: 'Resumen', w: 50, e: '2 h libres' },
 ] as const
+const HORAS = ['3/4 h', '2/6 h', '2/4 h']
 
 function Vista() {
   return (
@@ -50,15 +54,15 @@ function Vista() {
         </div>
         <div className="in-vpag">
           <h3>📋 Tablero</h3>
-          <p className="in-vsub">Carga por persona esta semana</p>
+          <p className="in-vsub">Carga por persona</p>
           {FILAS.map((f, i) => (
             <div className="in-fila" key={f.n}>
-              <span className="in-fn">{f.n}<small>{f.c}</small></span>
-              <span className="in-barra"><span style={{ ['--w' as string]: `${f.w}%`, ['--d' as string]: `${1300 + i * 150}ms` }} className={`in-llena in-${f.t}`} /></span>
-              <span className={`tag tag-${f.t}`}>{f.e}</span>
+              <span className="in-fn">{f.n} <span className="num fa">{HORAS[i]}</span><small>{f.c}</small></span>
+              <span className="in-barra"><span style={{ ['--w' as string]: `${f.w}%`, ['--d' as string]: `${1300 + i * 150}ms` }} className={`in-llena in-azul`} /></span>
+              <span className="tag tag-azul">{f.e}</span>
             </div>
           ))}
-          <div className="in-vprop"><b>Propuesta para Marta</b> · Luis y Ana pueden tomar 2 tareas. Tú decides.</div>
+          <div className="in-vprop"><b>Ana se ausenta</b> · Propuesta: Luis cubre Boceto (2 → 5 de 6 h). Tú decides.</div>
         </div>
       </div>
     </div>

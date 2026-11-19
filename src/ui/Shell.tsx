@@ -5,20 +5,22 @@ import { PAGINAS, type PaginaId, type Proyecto, type Tema } from './formato'
 type Props = {
   pagina: PaginaId
   proyecto: Proyecto
-  contadores: { integrantes: number; tareas: number }
+  contadores: { integrantes: number; tareas: number; entrega?: string }
   tema: Tema
   onNavegar: (pagina: PaginaId) => void
   onTema: () => void
   onInicio: () => void
   onReiniciar: () => void
+  /** Acciones a la derecha de la barra superior (Compartir, Presentar). */
+  acciones?: ReactNode
   children: ReactNode
 }
 
 /** Marco de la app: barra lateral de 240px, barra superior con migas y columna de página. En ≤760px la barra es un cajón. */
-export function Shell({ pagina, proyecto, contadores, tema, onNavegar, onTema, onInicio, onReiniciar, children }: Props) {
+export function Shell({ pagina, proyecto, contadores, tema, onNavegar, onTema, onInicio, onReiniciar, acciones, children }: Props) {
   const [abierto, setAbierto] = useState(false)
   const actual = PAGINAS.find((p) => p.id === pagina)
-  const cuentas: Partial<Record<PaginaId, number>> = { integrantes: contadores.integrantes, tareas: contadores.tareas }
+  const cuentas: Partial<Record<PaginaId, number | string>> = { integrantes: contadores.integrantes, tareas: contadores.tareas, entrega: contadores.entrega }
 
   useEffect(() => {
     if (!abierto) return
@@ -75,7 +77,10 @@ export function Shell({ pagina, proyecto, contadores, tema, onNavegar, onTema, o
             <span className="sep" aria-hidden="true">/</span>
             <b aria-current="page">{actual?.emoji} {actual?.label}</b>
           </nav>
-          <span className="n-top-der">{proyecto.ejemplo ? 'Datos de ejemplo' : 'Proyecto nuevo'}</span>
+          <span className="n-top-der">
+            <span className="n-estado">{proyecto.ejemplo ? 'Datos de ejemplo' : 'Proyecto nuevo'}</span>
+            {acciones}
+          </span>
         </header>
         <main className="n-pagina">{children}</main>
       </div>

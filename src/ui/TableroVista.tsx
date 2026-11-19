@@ -30,9 +30,11 @@ export function TableroVista({ proyecto, members, tasks, onIr }: Props) {
   }, [sim, members, tasks])
 
   if (members.length === 0 || tasks.length === 0) {
+    const pasos = [members.length > 0, tasks.length > 0, simulado].filter(Boolean).length
     return (
       <Pagina icono="👋" titulo={`Bienvenido a ${proyecto}`}>
         <p className="p-parr">Aquí verás quién carga cuánto trabajo y si alguien se pasa de su disponibilidad. Empieza con tres pasos.</p>
+        <p className="p-progreso num" aria-live="polite">{pasos} de 3 pasos</p>
         <Checklist items={[
           { texto: 'Agrega integrantes', hecho: members.length > 0, accion: { texto: 'Ir a Integrantes', onClick: () => onIr('integrantes') } },
           { texto: 'Crea tareas', hecho: tasks.length > 0, accion: { texto: 'Ir a Tareas', onClick: () => onIr('tareas') } },

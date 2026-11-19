@@ -110,9 +110,9 @@ export function IntegrantesVista({ members, tasks, dispatch }: Props) {
       <BaseDeDatos
         columnas={[
           { icono: 'texto', nombre: 'Nombre' },
-          { icono: 'numero', nombre: 'Horas disponibles' },
-          { icono: 'numero', nombre: 'Tareas' },
-          { icono: 'estado', nombre: 'Carga' },
+          { icono: 'numero', nombre: 'Horas disponibles', ancho: '172px' },
+          { icono: 'numero', nombre: 'Tareas', ancho: '84px' },
+          { icono: 'estado', nombre: 'Carga', ancho: '290px' },
         ]}
         textoNueva="Nuevo integrante"
         onNueva={() => { if (!borrador) setBorrador({ nombre: '', horas: '' }) }}

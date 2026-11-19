@@ -126,8 +126,8 @@ a { color: var(--ac-tx); }
 .av3 { background: var(--av3); color: var(--av3t); }
 
 /* Estructura: barra lateral, barra superior, página */
-.n-app { min-height: 100vh; }
-.n-side { position: fixed; inset: 0 auto 0 0; width: 240px; z-index: 30; display: flex; flex-direction: column; gap: 2px; padding: 10px 8px 12px; background: var(--side); font-size: 14px; font-weight: 500; overflow-y: auto; }
+.n-app { display: flex; min-height: 100vh; min-height: 100dvh; }
+.n-side { position: sticky; top: 0; flex: none; align-self: flex-start; height: 100vh; height: 100dvh; width: 240px; z-index: 30; display: flex; flex-direction: column; gap: 2px; padding: 10px 8px 12px; background: var(--side); font-size: 14px; font-weight: 500; overflow-y: auto; }
 .n-ws { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 8px; border: 0; border-radius: 6px; background: none; text-align: left; cursor: pointer; }
 .n-ws:hover { background: var(--hover); }
 .n-ws img { width: 20px; height: 20px; flex: none; }
@@ -149,12 +149,18 @@ a { color: var(--ac-tx); }
 .n-lema { padding: 6px 8px 0; font-size: 12px; font-weight: 400; line-height: 1.4; color: var(--tx2); }
 .n-llat { margin-top: 4px; }
 
-.n-main { margin-left: 240px; min-width: 0; }
+.n-main { flex: 1; min-width: 0; }
 .n-top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; background: var(--bg); font-size: 14px; }
-.n-migas { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.n-migas .sep { color: var(--tx3); }
+.n-migas { display: flex; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0; white-space: nowrap; }
+.n-migas > span:not(.sep), .n-migas > b { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.n-migas > span:first-of-type { flex: 0 1 auto; }
+.n-migas > b { flex: 0 1 auto; }
+.n-migas .sep { flex: none; color: var(--tx3); }
 .n-migas b { font-weight: 500; }
-.n-top-der { margin-left: auto; color: var(--tx2); white-space: nowrap; }
+.n-top-der { flex: none; display: flex; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; }
+.n-estado { color: var(--tx2); }
+.n-top .btn { height: 28px; padding: 0 10px; }
+.n-presentar { padding: 0 12px; }
 .n-menu { display: none; }
 .n-pagina { width: 100%; max-width: 900px; margin: 0 auto; padding: 72px 96px 160px; display: flex; flex-direction: column; gap: 32px; }
 .n-velo { display: none; }
@@ -204,6 +210,7 @@ button.n-caja { cursor: pointer; }
 .n-bd-vista { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 8px; margin-top: 2px; border-bottom: 2px solid var(--tx); font-size: 14px; font-weight: 500; }
 .n-bd-marco { overflow-x: auto; border-top: 1px solid var(--bd); border-bottom: 1px solid var(--bd); }
 .n-tabla { width: 100%; border-collapse: collapse; font-size: 14px; }
+.n-tabla th, .n-tabla td { overflow: hidden; text-overflow: ellipsis; }
 .n-tabla th { height: 34px; padding: 0 10px; text-align: left; font-weight: 400; color: var(--tx2); white-space: nowrap; border-bottom: 1px solid var(--bd); }
 .n-tabla th .icono { vertical-align: -2px; margin-right: 6px; }
 .n-tabla td { height: 36px; padding: 0 10px; border-bottom: 1px solid var(--bd); vertical-align: middle; }
@@ -230,10 +237,12 @@ select.cel { cursor: pointer; }
 .n-barra-txt { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 @media (max-width: 760px) {
-  .n-side { transform: translateX(-100%); transition: transform .2s ease-out; box-shadow: var(--pop); }
+  .n-side { position: fixed; inset: 0 auto 0 0; transform: translateX(-100%); transition: transform .2s ease-out; box-shadow: var(--pop); }
   .n-side[data-abierto="true"] { transform: none; }
   .n-velo { display: block; position: fixed; inset: 0; z-index: 20; background: rgba(0, 0, 0, .5); border: 0; }
-  .n-main { margin-left: 0; }
+  .n-estado, .n-acc-t { display: none; }
+  .n-top .btn { width: 32px; padding: 0; }
+  .n-top { padding: 0 8px; }
   .n-menu { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 0; border-radius: 6px; background: none; cursor: pointer; }
   .n-menu:hover { background: var(--hover); }
   .n-pagina { padding: 40px 20px 120px; }
@@ -244,3 +253,6 @@ select.cel { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   .n-side, .n-flecha, .n-barra-fill, .n-barra-extra, .btn { transition: none; }
 }
+
+/* Entrega (C): el titular es una frase larga; en 28px no domina la página. */
+.entrega-cabecera h1 { font-size: 28px; line-height: 1.3; }

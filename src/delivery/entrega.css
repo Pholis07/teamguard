@@ -10,3 +10,7 @@
 .entrega-sub { font-size: 12px; }
 .entrega-archivos { display: flex; flex-direction: column; gap: 2px; flex: 2 1 220px; min-width: 0; overflow-wrap: anywhere; }
 .entrega-fila .chip { min-width: 104px; justify-content: center; }
+.entrega-seccion-cabeza { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+.entrega-seccion-cabeza h2 { flex: 1; }
+.entrega-seccion-cabeza .fa { font-size: 12.5px; }
+.bitacora .num { min-width: 44px; }

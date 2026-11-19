@@ -1,10 +1,8 @@
 /* Bases de datos editables: Integrantes y Tareas */
 .dt-celda { position: relative; min-width: 0; }
 .dt-nombre { display: flex; align-items: center; gap: 4px; min-width: 0; padding-left: 4px; }
-.dt-nombre .cel { min-width: 90px; }
-.dt-celda .cel[type="date"] { min-width: 130px; color-scheme: dark; font-family: inherit; }
+.dt-celda .cel[type="date"] { color-scheme: dark; font-family: inherit; padding: 0 2px 0 4px; }
 :root[data-tema="claro"] .dt-celda .cel[type="date"] { color-scheme: light; }
-.dt-celda .cel.num { min-width: 56px; }
 .dt-cuenta { color: var(--tx2); }
 .dt-error { margin: 0; padding: 2px 6px 4px; font-size: 12px; line-height: 1.3; color: var(--tag-rojo-tx); background: var(--tag-rojo-bg); border-radius: 4px; }
 .dt-error[hidden] { display: none; }
@@ -27,6 +25,15 @@
 .dt-check input:focus-visible { outline: 2px solid var(--ac); outline-offset: 2px; }
 .dt-callout-p { margin: 0 0 8px; }
 .dt-nota { margin: 0; color: var(--tx3); font-size: 13px; }
-.n-tabla:has(.dt-fila) { min-width: 700px; }
-.dt-celda .cel:not(.num):not([type="date"]) { min-width: 130px; }
-.dt-celda .cel[type="date"] { min-width: 118px; }
+/* Escritorio: las tablas editables caben en su columna (columnas fijas, texto con elipsis). */
+.n-tabla:has(.dt-fila) { table-layout: fixed; }
+.n-tabla:has(.dt-fila) td, .n-tabla:has(.dt-fila) th { padding-left: 6px; padding-right: 6px; }
+.dt-fila .cel, .dt-fila .dt-estado { max-width: 100%; text-overflow: ellipsis; }
+.dt-celda .cel[type="date"]:focus-visible, .p-campo input:focus-visible { outline: 0; border-color: var(--ac); box-shadow: 0 0 0 1px var(--ac); }
+.dt-archivo { display: flex; align-items: center; gap: 6px; }
+.dt-archivo .dt-borrar { margin-left: auto; }
+/* Solo en móvil la tabla conserva su ancho natural y se desplaza dentro de su marco. */
+@media (max-width: 760px) { .n-tabla:has(.dt-fila) { min-width: 640px; } }
+.dt-carga .n-barra { min-width: 0; gap: 8px; flex-wrap: wrap; }
+.dt-carga .n-barra-pista { min-width: 48px; }
+.dt-carga .n-barra-txt { flex-wrap: wrap; gap: 4px 8px; white-space: normal; }

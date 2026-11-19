@@ -59,5 +59,7 @@
 .n-bd .n-tabla th:first-child, .n-bd .n-tabla td:first-child { padding-left: 4px; }
 .p-carga .n-barra { gap: 8px; }
 .p-carga .n-barra-pista { min-width: 40px; }
-@media (min-width: 761px) { .n-doc:has(.p-estado) .n-tabla { min-width: 0; } }
 .n-callout > .n-callout-i { align-self: flex-start; }
+.p-campo input { border-width: 2px; border-color: var(--bd); }
+.p-campo input:focus, .p-campo input:focus-visible { outline: 0; border-color: var(--ac); }
+.p-progreso { color: var(--tx2); font-size: 14px; }

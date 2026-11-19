@@ -57,11 +57,11 @@ export function TareasVista({ members, tasks, dispatch, onIr }: Props) {
       <BaseDeDatos
         columnas={[
           { icono: 'texto', nombre: 'Tarea' },
-          { icono: 'persona', nombre: 'Responsable' },
-          { icono: 'numero', nombre: 'Horas' },
-          { icono: 'calendario', nombre: 'Fecha límite' },
-          { icono: 'estado', nombre: 'Estado' },
-          { icono: 'check', nombre: 'Archivo' },
+          { icono: 'persona', nombre: 'Responsable', ancho: '124px' },
+          { icono: 'numero', nombre: 'Horas', ancho: '84px' },
+          { icono: 'calendario', nombre: 'Fecha límite', ancho: '136px' },
+          { icono: 'estado', nombre: 'Estado', ancho: '118px' },
+          { icono: 'check', nombre: 'Archivo', ancho: '92px' },
         ]}
         textoNueva="Nueva tarea"
         onNueva={members.length > 0 ? nueva : undefined}
@@ -121,15 +121,14 @@ export function TareasVista({ members, tasks, dispatch, onIr }: Props) {
                 </label>
               </td>
               <td>
-                <div className="dt-carga">
-                  <label className="dt-check">
+                <div className="dt-archivo">
+                  <label className="dt-check" title="Requiere archivo">
                     <input
                       type="checkbox"
                       checked={t.requiresFile}
                       aria-label={`Archivo de ${t.title}`}
                       onChange={(e) => dispatch({ type: 'updateTask', id: t.id, cambios: { requiresFile: e.target.checked } })}
                     />
-                    Requiere archivo
                   </label>
                   <button type="button" className="btn btn-t dt-borrar" aria-label={`Eliminar ${t.title}`} title={`Eliminar ${t.title}`} onClick={() => dispatch({ type: 'removeTask', id: t.id })}>
                     <Icono nombre="basura" tam={15} />

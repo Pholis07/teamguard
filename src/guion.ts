@@ -1,0 +1,40 @@
+export type Paso = {
+  desde: number
+  hasta: number
+  titulo: string
+  vista: 'tablero' | 'contingencia' | 'entrega'
+  decir: string
+  hacer: string
+  /** Al entrar, carga dos entregas de ejemplo y ofrece completar la tercera. */
+  preparaEntregas?: true
+}
+
+/** Guion de 60 s (05_GUION_DEMO_60_SEGUNDOS.md). */
+export const PASOS: readonly Paso[] = [
+  {
+    desde: 0, hasta: 10, titulo: 'El problema', vista: 'tablero',
+    decir: 'En muchos proyectos, el problema no es solo organizar tareas: es que el equipo no sabe cuándo se está saturando o cómo reaccionar ante un imprevisto.',
+    hacer: 'Muestra el Tablero: tres integrantes y su carga.',
+  },
+  {
+    desde: 10, hasta: 25, titulo: 'Sobrecarga', vista: 'tablero',
+    decir: 'Si la Ficha pasa a Ana, TeamGuard avisa antes de que ocurra: 125 %. Nada cambia hasta que alguien lo decide.',
+    hacer: '«Simular asignación» → Ficha pasa a Ana. Luego «Cancelar simulación».',
+  },
+  {
+    desde: 25, hasta: 40, titulo: 'Ausencia', vista: 'contingencia',
+    decir: 'Ana se ausenta. Solo guardamos las fechas, nunca el motivo. TeamGuard propone a Luis y una persona decide.',
+    hacer: '«Registrar ausencia» → revisa Luis de 2 a 5 de 6 h → «Aceptar».',
+  },
+  {
+    desde: 40, hasta: 50, titulo: 'Entrega', vista: 'entrega',
+    decir: 'Aquí se ve quién entregó y qué falta. El boceto lo subió Ana antes de ausentarse y conserva su autoría.',
+    hacer: 'Pulsa «Completar el Resumen» para la última aportación.',
+    preparaEntregas: true,
+  },
+  {
+    desde: 50, hasta: 60, titulo: 'Cierre', vista: 'entrega',
+    decir: 'TeamGuard no hace la tarea: protege los acuerdos, equilibra la colaboración y reúne el trabajo real del equipo.',
+    hacer: '«Descargar ZIP» y abre ACTA-DE-ENTREGA.md.',
+  },
+]
