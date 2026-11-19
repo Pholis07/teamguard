@@ -25,6 +25,36 @@ export const PAGINAS: readonly { id: PaginaId; icono: NombreIcono; label: string
 ]
 
 export type Tema = 'oscuro' | 'claro'
+export type Acento = 'grafito' | 'ambar' | 'verde' | 'azul' | 'violeta' | 'rosa'
+/** Muestra: color en tema oscuro; `claro` es el tono usado en tema claro (para que la muestra se vea igual que el acento). */
+export const ACENTOS: readonly { id: Acento; label: string; swatch: string; claro: string }[] = [
+  { id: 'grafito', label: 'Grafito', swatch: '#F2F2F2', claro: '#161616' },
+  { id: 'ambar', label: 'Ámbar', swatch: '#F5A524', claro: '#B45309' },
+  { id: 'verde', label: 'Verde', swatch: '#3DD68C', claro: '#15803D' },
+  { id: 'azul', label: 'Azul', swatch: '#4C9AFF', claro: '#2563EB' },
+  { id: 'violeta', label: 'Violeta', swatch: '#A78BFA', claro: '#7C3AED' },
+  { id: 'rosa', label: 'Rosa', swatch: '#F472B6', claro: '#BE185D' },
+]
+const CLAVE_ACENTO = 'tg-acento'
+/** Acento que la persona eligió de forma explícita; null si nunca eligió (entonces manda el sugerido por versión). */
+export function acentoGuardado(): Acento | null {
+  try {
+    const v = localStorage.getItem(CLAVE_ACENTO)
+    return ACENTOS.some((a) => a.id === v) ? (v as Acento) : null
+  } catch {
+    return null
+  }
+}
+export function aplicarAcento(a: Acento) {
+  document.documentElement.dataset.acento = a
+}
+export function guardarAcento(a: Acento) {
+  try {
+    localStorage.setItem(CLAVE_ACENTO, a)
+  } catch {
+    // Sin almacenamiento: el acento solo dura esta sesión.
+  }
+}
 export type Proyecto = { nombre: string; ejemplo: boolean }
 
 /* Colores de etiqueta (escala monocroma + alerta) y sus usos fijos. */

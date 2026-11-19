@@ -1,11 +1,15 @@
+import { useTextos } from './version'
 import { useState, type Dispatch, type FocusEvent, type KeyboardEvent } from 'react'
 import type { Member, Task } from '../domain'
+import type { Entrega } from '../delivery/zip'
+import { aporte } from './aporte'
+import { GraficaAporte } from './GraficaAporte'
 import type { Accion } from './estado'
 import { BarraCarga, BaseDeDatos, Callout, Icono, Pagina, Propiedades } from './bloques'
 import { horas, horasValidas, nombreValido, plural } from './formato'
 import './datos.css'
 
-type Props = { members: readonly Member[]; tasks: readonly Task[]; dispatch: Dispatch<Accion> }
+type Props = { members: readonly Member[]; tasks: readonly Task[]; files: readonly Entrega[]; dispatch: Dispatch<Accion> }
 
 /** Lee horas escritas por una persona («4», «2,5»). Vacío o texto no numérico da NaN. */
 const leerHoras = (s: string) => (s.trim() === '' ? NaN : Number(s.trim().replace(',', '.')))
@@ -70,7 +74,8 @@ export function CeldaTexto({ valor, etiqueta, onGuardar, validar, numerica, auto
 
 type Borrador = { nombre: string; horas: string }
 
-export function IntegrantesVista({ members, tasks, dispatch }: Props) {
+export function IntegrantesVista({ members, tasks, files, dispatch }: Props) {
+  const t = useTextos()
   const [borrador, setBorrador] = useState<Borrador | null>(null)
   const [errorBorrador, setErrorBorrador] = useState<string | null>(null)
 
@@ -98,23 +103,31 @@ export function IntegrantesVista({ members, tasks, dispatch }: Props) {
   return (
     <Pagina
       icono="integrantes"
-      titulo="Integrantes"
+      titulo={t.integrantes}
       propiedades={<Propiedades items={[
-        { icono: 'personas', etiqueta: 'Integrantes', valor: <span className="num">{members.length}</span> },
+        { icono: 'personas', etiqueta: t.integrantes, valor: <span className="num">{members.length}</span> },
         { icono: 'reloj', etiqueta: 'Horas disponibles', valor: <span className="num">{horas(totalHoras)} h en total</span> },
       ]} />}
     >
       {members.length === 0 && !borrador && (
-        <Callout icono="info">Agrega a las personas del equipo y cuántas horas pueden dar hasta la entrega.</Callout>
+        <Callout icono="info">{t.vacioIntegrantes}</Callout>
+      )}
+      {members.length > 0 && tasks.length > 0 && (
+        <section className="n-bd">
+          <h2 className="n-bd-tit">Quién aporta cuánto</h2>
+          <p className="n-bd-sub">% de las horas del equipo</p>
+          <GraficaAporte compacta datos={aporte(members, tasks, files)} />
+        </section>
       )}
       <BaseDeDatos
+        subtitulo="Carga: % de su tiempo disponible"
         columnas={[
           { icono: 'texto', nombre: 'Nombre' },
           { icono: 'numero', nombre: 'Horas disponibles', ancho: '172px' },
           { icono: 'numero', nombre: 'Tareas', ancho: '84px' },
           { icono: 'estado', nombre: 'Carga', ancho: '290px' },
         ]}
-        textoNueva="Nuevo integrante"
+        textoNueva={t.nuevoIntegrante}
         onNueva={() => { if (!borrador) setBorrador({ nombre: '', horas: '' }) }}
       >
         {members.map((m, i) => {
@@ -172,7 +185,7 @@ export function IntegrantesVista({ members, tasks, dispatch }: Props) {
                   type="text"
                   autoFocus
                   placeholder="Nombre"
-                  aria-label="Nombre del nuevo integrante"
+                  aria-label={`Nombre del ${t.integrante.toLowerCase()} nuevo`}
                   value={borrador.nombre}
                   onChange={(e) => { setBorrador({ ...borrador, nombre: e.target.value }); setErrorBorrador(null) }}
                   onKeyDown={alTeclaBorrador}
@@ -185,7 +198,7 @@ export function IntegrantesVista({ members, tasks, dispatch }: Props) {
                 type="text"
                 inputMode="decimal"
                 placeholder="Horas"
-                aria-label="Horas del nuevo integrante"
+                aria-label={`Horas del ${t.integrante.toLowerCase()} nuevo`}
                 value={borrador.horas}
                 onChange={(e) => { setBorrador({ ...borrador, horas: e.target.value }); setErrorBorrador(null) }}
                 onKeyDown={alTeclaBorrador}

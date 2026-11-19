@@ -5,6 +5,16 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TeamGuard</title>
+    <script>
+      try {
+        var a = localStorage.getItem('tg-acento');
+        var v = localStorage.getItem('tg-version') === 'empresas' ? 'empresas' : 'estudiantes';
+        document.documentElement.dataset.version = v;
+        document.documentElement.dataset.acento = a || (v === 'empresas' ? 'azul' : 'violeta');
+        var t = localStorage.getItem('tg-tema');
+        if (t === 'claro') document.documentElement.dataset.tema = 'claro';
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

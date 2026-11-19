@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 import { analizarRescate, DEMO_ABSENCE, proposeCoverage } from '../domain'
+import { equilibrio } from './equilibrio'
 import { contextoDe, reducer, estadoInicial, type Estado } from './estado'
 
 const ejemplo = (): Estado => reducer(estadoInicial(), { type: 'cargarEjemplo' })
@@ -49,4 +50,16 @@ test('las dependencias inválidas (a sí misma o circulares) se rechazan; al bor
   expect(conDep.tasks.find((t) => t.id === 't3')!.dependsOn).toEqual(['t2'])
   expect(reducer(conDep, { type: 'updateTask', id: 't2', cambios: { dependsOn: ['t3'] } })).toBe(conDep)
   expect(reducer(conDep, { type: 'removeTask', id: 't2' }).tasks.find((t) => t.id === 't3')!.dependsOn).toEqual([])
+})
+
+test('la versión nombra el ejemplo, se conserva al reiniciar y no toca los datos', () => {
+  const emp = reducer(estadoInicial(), { type: 'setVersion', version: 'empresas' })
+  const e = reducer(emp, { type: 'cargarEjemplo' })
+  expect(e.proyecto).toEqual({ nombre: 'Campaña Q4 (ejemplo)', ejemplo: true })
+  expect(e.tasks).toEqual(ejemplo().tasks)
+  expect(e.members.map((m) => m.name)).toEqual(['Ana', 'Luis', 'Sol'])
+  expect(equilibrio(contextoDe(e)).indice).toBe(100)
+  expect(reducer(e, { type: 'reset' }).version).toBe('empresas')
+  expect(ejemplo().proyecto!.nombre).toBe('Proyecto final (ejemplo)')
+  expect(reducer(emp, { type: 'setVersion', version: 'empresas' })).toBe(emp)
 })

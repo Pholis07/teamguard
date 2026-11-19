@@ -2,10 +2,13 @@ import { cicloDe, confirmProposal, createDemoState, DEMO_DATE, type Absence, typ
 import type { Entrega } from '../delivery/zip'
 import type { Decision } from '../delivery/acta'
 import { equilibrio } from './equilibrio'
+import { TEXTOS, type Version } from './version'
 import { fechaValida, horasValidas, nombreValido, rango, type Proyecto } from './formato'
 
 /* Estado compartido. Las cargas no se guardan: se calculan a partir de aquí. */
 export type Estado = {
+  /** Versión de textos (Estudiantes / Empresas); sobrevive a entrar, salir y reiniciar. */
+  version: Version
   fase: 'inicio' | 'app'
   proyecto: Proyecto | null
   members: Member[]
@@ -46,8 +49,9 @@ export type Accion =
   | { type: 'setAbsence'; absence: Absence | null; hora: string }
   | { type: 'addFile'; entrega: Entrega }
   | { type: 'reset' }
+  | { type: 'setVersion'; version: Version }
 
-export const estadoInicial = (): Estado => ({ fase: 'inicio', proyecto: null, members: [], tasks: [], absence: null, files: [], decisiones: [] })
+export const estadoInicial = (version: Version = 'estudiantes'): Estado => ({ version, fase: 'inicio', proyecto: null, members: [], tasks: [], absence: null, files: [], decisiones: [] })
 
 export const contextoDe = (estado: Estado): RuleContext => ({
   members: estado.members,
@@ -92,12 +96,12 @@ const reasignar = (estado: Estado, id: string, ownerId: string, hora: string, or
 export function reducer(estado: Estado, accion: Accion): Estado {
   switch (accion.type) {
     case 'entrar':
-      return { ...estadoInicial(), fase: 'app', proyecto: null }
+      return { ...estadoInicial(estado.version), fase: 'app', proyecto: null }
     case 'iniciar':
       if (!nombreValido(accion.nombre)) return estado
-      return { ...estadoInicial(), fase: 'app', proyecto: { nombre: accion.nombre.trim(), ejemplo: false } }
+      return { ...estadoInicial(estado.version), fase: 'app', proyecto: { nombre: accion.nombre.trim(), ejemplo: false } }
     case 'cargarEjemplo':
-      return { ...estadoInicial(), ...createDemoState(), fase: 'app', proyecto: { nombre: 'Proyecto final (ejemplo)', ejemplo: true } }
+      return { ...estadoInicial(estado.version), ...createDemoState(), fase: 'app', proyecto: { nombre: TEXTOS[estado.version].ejemplo, ejemplo: true } }
     case 'salir':
       return { ...estado, fase: 'inicio' }
     case 'addMember': {
@@ -176,6 +180,8 @@ export function reducer(estado: Estado, accion: Accion): Estado {
     case 'addFile':
       return { ...estado, files: [...estado.files, accion.entrega] }
     case 'reset':
-      return estadoInicial()
+      return estadoInicial(estado.version)
+    case 'setVersion':
+      return accion.version === estado.version ? estado : { ...estado, version: accion.version }
   }
 }

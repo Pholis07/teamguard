@@ -1,5 +1,6 @@
-import { Children, useEffect, useRef, useState, type ReactNode } from 'react'
-import { PAGINAS, horas, pct, type ColorEtiqueta } from './formato'
+import { Children, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react'
+import { useTextos, VERSIONES, type Version } from './version'
+import { ACENTOS, PAGINAS, horas, pct, type Acento, type ColorEtiqueta } from './formato'
 
 /* Íconos: trazos Lucide en línea, un solo grosor (1.5) en toda la interfaz. */
 const TRAZOS = {
@@ -48,10 +49,61 @@ export function Icono({ nombre, tam = 16 }: { nombre: NombreIcono; tam?: number 
   )
 }
 
+/** Selector del color de acento: muestras circulares (radiogroup) con flechas para moverse y check en la elegida. */
+export function SelectorAcento({ acento, onAcento }: { acento: Acento; onAcento: (a: Acento) => void }) {
+  const grupo = useRef<HTMLDivElement>(null)
+  const alTeclear = (e: KeyboardEvent) => {
+    const paso = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0
+    if (!paso) return
+    e.preventDefault()
+    const i = ACENTOS.findIndex((a) => a.id === acento)
+    const sig = ACENTOS[(i + paso + ACENTOS.length) % ACENTOS.length]
+    onAcento(sig.id)
+    grupo.current?.querySelector<HTMLElement>(`[data-id="${sig.id}"]`)?.focus()
+  }
+  return (
+    <div className="sa" role="radiogroup" aria-label="Color de acento" ref={grupo} onKeyDown={alTeclear}>
+      {ACENTOS.map((a) => (
+        <button
+          key={a.id} type="button" role="radio" className="sa-m" data-id={a.id} aria-checked={a.id === acento} aria-label={a.label} title={a.label}
+          tabIndex={a.id === acento ? 0 : -1} style={{ '--m': a.swatch, '--mc': a.claro } as CSSProperties} onClick={() => onAcento(a.id)}
+        >
+          <Icono nombre="check" tam={12} />
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/** Control segmentado «Estudiantes | Empresas» (radiogrupo con flechas). */
+export function SelectorVersion({ version, onVersion, className = '' }: { version: Version; onVersion: (v: Version) => void; className?: string }) {
+  const grupo = useRef<HTMLDivElement>(null)
+  const alTeclear = (e: KeyboardEvent) => {
+    const paso = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0
+    if (!paso) return
+    e.preventDefault()
+    const i = VERSIONES.findIndex((v) => v.id === version)
+    const sig = VERSIONES[(i + paso + VERSIONES.length) % VERSIONES.length]
+    onVersion(sig.id)
+    grupo.current?.querySelector<HTMLElement>(`[data-id="${sig.id}"]`)?.focus()
+  }
+  return (
+    <div className={`sv ${className}`} role="radiogroup" aria-label="Versión" ref={grupo} onKeyDown={alTeclear}>
+      {VERSIONES.map((v) => (
+        <button key={v.id} type="button" role="radio" className="sv-o" data-id={v.id} aria-checked={v.id === version} tabIndex={v.id === version ? 0 : -1} onClick={() => onVersion(v.id)}>
+          {v.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 /** Página: etiqueta superior «PROYECTO · SECCIÓN», ícono de línea junto al título, propiedades como fichas, divisor y bloques.
  *  `icono` es un nombre de ícono; `seccion` (opcional) sale de PAGINAS cuando el ícono es el de una página. */
 export function Pagina({ icono, seccion, titulo, propiedades, children }: { icono: NombreIcono; seccion?: string; titulo: ReactNode; propiedades?: ReactNode; children?: ReactNode }) {
-  const etiqueta = seccion ?? PAGINAS.find((p) => p.icono === icono)?.label
+  const t = useTextos()
+  const pag = PAGINAS.find((p) => p.icono === icono)
+  const etiqueta = seccion ?? (pag?.id === 'integrantes' ? t.pagina.integrantes : pag?.label)
   return (
     <article className="n-doc">
       <header className="n-cab">
@@ -190,8 +242,12 @@ export function BarraCarga({ asignadas, disponibles, soloBarra }: { asignadas: n
 }
 
 /** Tabla. `children` son filas `<tr>` (usa `.cel` en inputs para edición en línea). Con `onNueva` agrega «+ Nueva». */
-export function BaseDeDatos({ titulo, columnas, onNueva, textoNueva = 'Nueva', vacio, children }: {
+export function BaseDeDatos({ titulo, subtitulo, apilada, columnas, onNueva, textoNueva = 'Nueva', vacio, children }: {
   titulo?: ReactNode
+  /** Aclara qué mide la tabla («% de su tiempo disponible»). */
+  subtitulo?: ReactNode
+  /** En móvil cada fila pasa a ser una tarjeta en vez de desplazarse. */
+  apilada?: boolean
   columnas: { icono?: NombreIcono; nombre: string; ancho?: string }[]
   onNueva?: () => void
   textoNueva?: string
@@ -202,8 +258,8 @@ export function BaseDeDatos({ titulo, columnas, onNueva, textoNueva = 'Nueva', v
   return (
     <section className="n-bd">
       {titulo && <h2 className="n-bd-tit">{titulo}</h2>}
-      <div className="n-bd-cab"><span className="n-bd-vista"><Icono nombre="tabla" tam={14} />Tabla</span></div>
-      <div className="n-bd-marco">
+      {subtitulo && <p className="n-bd-sub">{subtitulo}</p>}
+      <div className={apilada ? 'n-bd-marco n-apilada' : 'n-bd-marco'}>
         <table className="n-tabla">
           <thead>
             <tr>{columnas.map((c) => <th key={c.nombre} style={c.ancho ? { width: c.ancho } : undefined}>{c.nombre}</th>)}</tr>
