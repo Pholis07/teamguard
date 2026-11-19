@@ -170,14 +170,20 @@ function Vista() {
 /* ---------- Cinta continua ---------- */
 function Cinta() {
   const { eventos } = useTextos()
+  const [pausada, setPausada] = useState(false)
   const grupo = (oculto: boolean) => (
     <ul className="in-grupo" aria-hidden={oculto || undefined}>
       {eventos.map((e) => <li key={e.t} className={e.al ? 'al' : ''}><Icono nombre={e.i} tam={16} />{e.t}</li>)}
     </ul>
   )
   return (
-    <div className="in-cinta" role="group" aria-label="Eventos de ejemplo de un equipo">
-      <div className="in-pista">{grupo(false)}{grupo(true)}</div>
+    <div className={`in-cinta-w ${pausada ? 'in-cinta-p' : ''}`}>
+      <div className="in-cinta" role="group" aria-label="Eventos de ejemplo de un equipo">
+        <div className="in-pista">{grupo(false)}{grupo(true)}</div>
+      </div>
+      <button type="button" className="in-icobtn in-cinta-btn" aria-pressed={pausada} aria-label="Pausar animación de eventos" onClick={() => setPausada((v) => !v)}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">{pausada ? <path d="M7 4.5v15l12-7.5z" /> : <><rect x="6" y="4.5" width="4" height="15" rx="1" /><rect x="14" y="4.5" width="4" height="15" rx="1" /></>}</svg>
+      </button>
     </div>
   )
 }
@@ -291,7 +297,7 @@ const PRODUCTO = [
   { href: '#entrega', t: 'Entrega', d: 'El ZIP con todo' },
 ] as const
 
-function Barra({ version, tema, acento, onAcento, onTema, onEmpezar, onEjemplo, logo }: { version: Version; tema: Tema; acento: Acento; onAcento: (a: Acento) => void; onTema: () => void; onEmpezar: () => void; onEjemplo: () => void; logo: string }) {
+function Barra({ version, tema, acento, onAcento, onTema, onEmpezar, logo }: { version: Version; tema: Tema; acento: Acento; onAcento: (a: Acento) => void; onTema: () => void; onEmpezar: () => void; logo: string }) {
   const [producto, setProducto] = useState(false)
   const [menu, setMenu] = useState(false)
   const [colores, setColores] = useState(false)
@@ -355,8 +361,7 @@ function Barra({ version, tema, acento, onAcento, onTema, onEmpezar, onEjemplo, 
           {colores && <div id="in-acento" className="in-pop in-pop-ac"><SelectorAcento acento={acento} onAcento={onAcento} /></div>}
         </div>
         <button type="button" className="in-icobtn in-tema" onClick={onTema} aria-label={claro ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}><Icono nombre={claro ? 'sol' : 'luna'} tam={18} /></button>
-        <button type="button" className="in-link in-ver" onClick={onEjemplo}>Ver ejemplo</button>
-        <button type="button" className="btn btn-p in-abrir" onClick={onEmpezar}><span>Abrir<span className="in-solo-d"> TeamGuard</span></span></button>
+        <button type="button" className="btn btn-p in-abrir" onClick={onEmpezar}>Empezar</button>
         <button ref={btnMenu} type="button" className="in-icobtn in-hamb" aria-expanded={menu} aria-controls="in-menu" aria-label={menu ? 'Cerrar menú' : 'Abrir menú'} onClick={() => setMenu((v) => !v)}><Icono nombre={menu ? 'x' : 'menu'} tam={20} /></button>
       </div>
       {menu && (
@@ -365,8 +370,9 @@ function Barra({ version, tema, acento, onAcento, onTema, onEmpezar, onEjemplo, 
           <a href="#como" onClick={ir}>Cómo funciona</a>
           <a href="#privacidad" onClick={ir}>Privacidad</a>
           <a href="#creditos" onClick={ir}>Créditos</a>
-          <button type="button" onClick={() => { cerrar(); onEjemplo() }}>Ver ejemplo</button>
+          <SelectorVersion className="sv-panel" version={version} onVersion={irAVersion} />
           <div className="in-panel-ac"><span>Color de acento</span><SelectorAcento acento={acento} onAcento={onAcento} /></div>
+          <button type="button" className="btn btn-p in-panel-cta" onClick={() => { cerrar(); onEmpezar() }}>Empezar</button>
         </div>
       )}
     </header>
@@ -392,16 +398,16 @@ export function Inicio({ tema, acento, onAcento, version, onTema, onEmpezar, onE
 
   return (
     <div className={`in ${saliendo ? 'in-sale' : ''} ${activo ? '' : 'in-pausa'}`}>
-      <Barra version={version} tema={tema} acento={acento} onAcento={onAcento} onTema={onTema} onEmpezar={empezar} onEjemplo={ejemplo} logo={logo} />
+      <Barra version={version} tema={tema} acento={acento} onAcento={onAcento} onTema={onTema} onEmpezar={empezar} logo={logo} />
 
       <main id="inicio" key={version} className="in-entra">
         <section className="in-heroe">
           <div className="in-velo" aria-hidden="true" />
           <SelectorVersion className="sv-in in-e" version={version} onVersion={irAVersion} />
           <img className="in-tigre in-e" style={{ ['--i' as string]: 0 }} src={logo} alt="" width="56" height="56" />
-          <p className="in-estado in-e" style={{ ['--i' as string]: 1 }}><span className="in-pt" /><span className="in-largo">{t.eyebrow}</span><span className="in-corto">{t.eyebrowCorto}</span></p>
+          <p className="in-estado in-e" style={{ ['--i' as string]: 1 }}><span className="in-largo">{t.eyebrow}</span><span className="in-corto">{t.eyebrowCorto}</span></p>
           <h1 className="in-titulo">
-            <span className="in-e" style={{ ['--i' as string]: 2 }}>{t.titulo.antes} <span className="in-capsula"><span className="in-punto" />{t.titulo.capsula}</span> {t.titulo.despues}</span>
+            <span className="in-e" style={{ ['--i' as string]: 2 }}>{t.titulo.antes} <span className="in-capsula">{t.titulo.capsula}</span> {t.titulo.despues}</span>
             <span className="in-gris in-e" style={{ ['--i' as string]: 3 }}>{t.titulo.gris}</span>
           </h1>
           <p className="in-sub in-e" style={{ ['--i' as string]: 4 }}>{t.sub}</p>
@@ -431,7 +437,7 @@ export function Inicio({ tema, acento, onAcento, version, onTema, onEmpezar, onE
               </>
             )}
           </div>
-          <div className="in-bento-cta"><button type="button" className="btn in-grande in-suave" onClick={ejemplo}>Ver el ejemplo <Icono nombre="flecha" tam={16} /></button></div>
+          <div className="in-bento-cta"><button type="button" className="btn in-grande in-suave" onClick={ejemplo}>Ver con datos de ejemplo</button></div>
         </Revela>
 
         <Revela className="in-seccion">

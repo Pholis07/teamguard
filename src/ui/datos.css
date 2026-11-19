@@ -9,12 +9,14 @@
 .dt-celda .dt-error { position: absolute; z-index: 2; left: 0; top: calc(100% - 3px); min-width: 180px; max-width: 260px; box-shadow: var(--pop, 0 2px 8px rgba(0, 0, 0, .3)); }
 .dt-pista { color: var(--tx3); font-size: 13px; }
 .dt-carga { display: flex; align-items: center; gap: 8px; }
+.dt-carga .dt-motivo { white-space: nowrap; }
 .dt-carga > :first-child { flex: 1; min-width: 0; }
-.dt-borrar { flex: none; width: 28px; height: 28px; padding: 0; opacity: 0; margin-left: auto; }
-.dt-fila:hover .dt-borrar, .dt-fila:focus-within .dt-borrar, .dt-borrar:focus-visible { opacity: 1; }
+.dt-borrar { flex: none; width: 32px; height: 32px; padding: 0; margin-left: auto; color: var(--tx2); }
 .dt-borrar:focus-visible { outline: 2px solid var(--ac); outline-offset: 1px; }
-.dt-fila:hover .dt-borrar:disabled, .dt-fila:focus-within .dt-borrar:disabled { opacity: .35; }
-@media (hover: none) { .dt-borrar { opacity: 1; } }
+.dt-borrar:hover:not(:disabled) { color: var(--alerta); background: var(--alerta-bg); }
+/* Deshabilitado: el icono se atenúa pero el motivo queda escrito junto a él. */
+.dt-borrar:disabled { opacity: .5; }
+.dt-motivo { flex: 0 1 auto; min-width: 0; font-size: 12px; line-height: 1.3; color: var(--tx2); text-align: right; }
 .dt-borrador { background: var(--hover); }
 .dt-estado { position: relative; display: inline-flex; align-items: center; height: 30px; padding: 0 2px; border-radius: 4px; cursor: pointer; }
 .dt-estado:hover { background: var(--hover); }
@@ -30,13 +32,48 @@
 .n-tabla:has(.dt-fila) th { white-space: normal; line-height: 1.2; }
 /* Escritorio: las tablas editables caben en su columna (columnas fijas, texto con elipsis). */
 .n-tabla:has(.dt-fila) { table-layout: fixed; }
-.n-tabla:has(.dt-fila) td, .n-tabla:has(.dt-fila) th { padding-left: 6px; padding-right: 6px; }
+.n-tabla:has(.dt-fila) td, .n-tabla:has(.dt-fila) th { padding: 8px 8px; }
+.n-tabla:has(.dt-fila) th { padding-top: 0; padding-bottom: 0; }
+.n-tabla:has(.dt-fila) tr.n-fila-nueva td { padding: 0; }
 .dt-fila .cel, .dt-fila .dt-estado { max-width: 100%; text-overflow: ellipsis; }
 .dt-celda .cel[type="date"]:focus-visible, .p-campo input:focus-visible { outline: 0; border-color: var(--ac); box-shadow: 0 0 0 1px var(--ac); }
-.dt-archivo { display: flex; align-items: center; gap: 6px; }
+.dt-archivo { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; }
 .dt-archivo .dt-borrar { margin-left: auto; }
-/* Solo en móvil la tabla conserva su ancho natural y se desplaza dentro de su marco. */
-@media (max-width: 760px) { .n-tabla:has(.dt-fila) { min-width: 640px; } }
+.dt-archivo .dt-motivo { flex: 1 0 100%; }
+/* Móvil: cada fila es una tarjeta (sin desplazamiento lateral ni títulos recortados), como la carga del Tablero. */
+@media (max-width: 760px) {
+  .n-bd-marco:has(.dt-fila) { background: none; overflow: visible; border: 0; padding-bottom: 0; }
+  .n-tabla:has(.dt-fila) { min-width: 0; display: block; table-layout: auto; }
+  .n-tabla:has(.dt-fila) thead { display: none; }
+  .n-tabla:has(.dt-fila) tbody { display: flex; flex-direction: column; gap: 10px; }
+  .n-tabla:has(.dt-fila) tr.dt-fila { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 12px; padding: 14px 16px; border: 1px solid var(--bd); border-radius: 8px; }
+  .n-tabla:has(.dt-fila) tbody tr.dt-fila:hover { background: none; }
+  .n-tabla:has(.dt-fila) tr.dt-fila > td { display: block; height: auto; min-width: 0; padding: 0; border: 0; overflow: visible; text-overflow: clip; white-space: normal; }
+  .n-tabla:has(.dt-fila) tr.dt-fila > td[data-et]::before { content: attr(data-et); display: block; margin-bottom: 2px; font-size: 12px; line-height: 1.3; color: var(--tx2); }
+  .n-tabla:has(.dt-fila) tr.n-fila-nueva, .n-tabla:has(.dt-fila) tr.n-fila-nueva td { display: block; }
+  .n-tabla:has(.dt-fila) tr.n-fila-nueva td { padding: 0; height: auto; overflow: visible; }
+  .n-tabla:has(.dt-fila) tr.n-fila-nueva .n-nueva { border: 1px dashed var(--bd); border-radius: 8px; justify-content: center; }
+  /* Tarea: título y archivo ocupan el ancho; responsable|horas y fecha|estado van en pares. */
+  .dt-f-tarea > td:nth-child(1), .dt-f-tarea > td:nth-child(6) { grid-column: 1 / -1; }
+  /* Integrante: nombre y carga ocupan el ancho; horas|tareas en par. */
+  .dt-f-integrante > td:nth-child(1), .dt-f-integrante > td:nth-child(4) { grid-column: 1 / -1; }
+  .dt-f-integrante > td:nth-child(3) { padding-left: 8px; }
+  .dt-f-integrante > td.dt-cuenta { line-height: 44px; }
+  .dt-celda .dt-error { position: static; min-width: 0; max-width: none; margin-top: 4px; box-shadow: none; }
+  .dt-vencida { padding: 4px 0 0; }
+  .dt-ok { top: 12px; }
+  /* Controles de 44 px. */
+  .cel { height: 44px; }
+  .dt-estado { height: 44px; padding: 0 8px; }
+  .dt-check { min-height: 44px; min-width: 44px; }
+  .dt-check input { width: 22px; height: 22px; }
+  .dt-borrar { width: 44px; height: 44px; }
+  .dt-archivo { flex-wrap: nowrap; }
+  .dt-archivo .dt-motivo { flex: 1 1 auto; text-align: right; }
+  .dt-carga { flex-wrap: wrap; }
+  .dt-borrador .btn { height: auto; min-height: 44px; }
+  .p-campo input { min-height: 44px; }
+}
 /* Marca de guardado, errores y controles nativos con el tema */
 .dt-ok { position: absolute; right: 5px; top: 8px; display: inline-flex; color: var(--tx2); pointer-events: none; }
 @media (prefers-reduced-motion: no-preference) { .dt-ok { animation: dt-ok .9s ease-out both; } @keyframes dt-ok { 0% { opacity: 0; transform: scale(.7); } 15% { opacity: 1; transform: scale(1); } 75% { opacity: 1; } 100% { opacity: 0; } } }

@@ -26,6 +26,8 @@ type Props = {
   /** Bitácora: alimenta la gráfica del equilibrio en el tiempo. */
   decisiones: readonly Decision[]
   onIr: (pagina: PaginaId) => void
+  /** Asigna la tarea simulada a quien se simuló (App la reasigna, anota la bitácora y avisa con «Deshacer»). */
+  onReasignar: (taskId: string, ownerId: string) => void
 }
 
 /** Recuerda durante la sesión que ya se simuló (la vista se desmonta al cambiar de página). */
@@ -88,7 +90,7 @@ function FranjaEquilibrio({ eq, eqSim, veredicto, alerta, accion }: { eq: Eq; eq
   )
 }
 
-export function TableroVista({ proyecto, ejemplo, members, tasks, files, contexto, decisiones, onIr }: Props) {
+export function TableroVista({ proyecto, ejemplo, members, tasks, files, contexto, decisiones, onIr, onReasignar }: Props) {
   const t = useTextos()
   const abiertas = tasks.filter((t) => t.status !== 'done')
   const [sim, setSim] = useState<{ taskId: string; candidateId: string } | null>(null)
@@ -143,6 +145,7 @@ export function TableroVista({ proyecto, ejemplo, members, tasks, files, context
   const libre = simulacion && tareaSim && cargas.find((c) =>
     c.memberId !== simulacion.currentOwnerId && c.memberId !== simulacion.candidateId &&
     c.status === 'normal' && c.remainingHours >= tareaSim.estimatedHours)
+  const nombreCandidato = (simulacion && miembroPorId(members, simulacion.candidateId)?.name) ?? ''
   const alternativa = libre ? `${miembroPorId(members, libre.memberId)?.name} tiene ${horas(libre.remainingHours)} h libres. ` : ''
 
   function abrirSimulacion() {
@@ -219,7 +222,7 @@ export function TableroVista({ proyecto, ejemplo, members, tasks, files, context
             <button type="button" className="btn btn-g" onClick={() => { guardarEmpieza(); setEmpiezaCerrada(true) }} aria-label="Cerrar la guía Empieza aquí"><Icono nombre="x" tam={14} />Cerrar</button>
           </div>
           <ol className="tb-empieza">
-            <li><span>Simula una asignación y mira cómo cambia el equilibrio.</span><button type="button" className="btn btn-s" onClick={abrirSimulacion} disabled={abiertas.length === 0 || members.length < 2}>Simular</button></li>
+            <li><span>Simula una asignación, mira cómo cambia el equilibrio y, si te convence, asígnala.</span><button type="button" className="btn btn-s" onClick={abrirSimulacion} disabled={abiertas.length === 0 || members.length < 2}>Simular</button></li>
             <li><span>Registra una ausencia y acepta quién la cubre.</span><button type="button" className="btn btn-s" onClick={() => onIr('contingencia')}>Ir a Contingencia</button></li>
             <li><span>Revisa la entrega y la bitácora de decisiones.</span><button type="button" className="btn btn-s" onClick={() => onIr('entrega')}>Ir a Entrega</button></li>
           </ol>
@@ -251,6 +254,13 @@ export function TableroVista({ proyecto, ejemplo, members, tasks, files, context
               : 'Cabe sin sobrecargar a nadie. Nada cambia hasta que alguien lo decida.'}
           </p>
           <div className="p-acciones">
+            <button
+              type="button" className="btn btn-p" disabled={!simulacion}
+              aria-label={sobreSim.length > 0 ? `Asignar de todos modos ${tareaSim?.title} a ${nombreCandidato}` : undefined}
+              onClick={() => { onReasignar(sim.taskId, sim.candidateId); setSim(null) }}
+            >
+              {sobreSim.length > 0 ? 'Asignar de todos modos' : `Asignar a ${nombreCandidato}`}
+            </button>
             <button type="button" className="btn btn-s" onClick={() => setSim(null)}><Icono nombre="x" />Cancelar simulación</button>
           </div>
         </Callout>

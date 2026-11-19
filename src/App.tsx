@@ -128,6 +128,18 @@ function AppInterna() {
     })
   }
 
+  // Asignar desde la simulación: misma acción que la bitácora registra como cambio manual; Deshacer devuelve la tarea.
+  function reasignarDesdeSimulacion(taskId: string, ownerId: string) {
+    const tarea = estado.tasks.find((t) => t.id === taskId)
+    if (!tarea || tarea.ownerId === ownerId) return
+    const antes = tarea.ownerId
+    dispatch({ type: 'reassignTask', id: taskId, ownerId, hora: ahora() })
+    avisar({
+      texto: `${tarea.title} ahora es de ${nombreDe(ownerId)}.`,
+      deshacer: () => dispatch({ type: 'reassignTask', id: taskId, ownerId: antes, hora: ahora() }),
+    })
+  }
+
   const conVersion = (n: ReactNode) => <VersionContext.Provider value={estado.version}>{n}</VersionContext.Provider>
 
   if (estado.fase === 'inicio') {
@@ -201,7 +213,7 @@ function AppInterna() {
         </>
       }
     >
-      {pagina === 'tablero' && <TableroVista proyecto={proyecto.nombre} ejemplo={proyecto.ejemplo} members={members} tasks={tasks} files={estado.files} contexto={contexto} decisiones={estado.decisiones} onIr={setPagina} />}
+      {pagina === 'tablero' && <TableroVista proyecto={proyecto.nombre} ejemplo={proyecto.ejemplo} members={members} tasks={tasks} files={estado.files} contexto={contexto} decisiones={estado.decisiones} onIr={setPagina} onReasignar={reasignarDesdeSimulacion} />}
       {pagina === 'integrantes' && <IntegrantesVista members={members} tasks={tasks} files={estado.files} dispatch={dispatch} absence={estado.absence} />}
       {pagina === 'tareas' && <TareasVista members={members} tasks={tasks} files={estado.files} dispatch={dispatch} onIr={setPagina} />}
       {pagina === 'contingencia' && (

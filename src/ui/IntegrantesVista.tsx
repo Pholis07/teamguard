@@ -181,7 +181,7 @@ export function IntegrantesVista({ members, tasks, files, dispatch, absence }: P
           const abiertas = suyas.filter((t) => t.status !== 'done').reduce((s, t) => s + t.estimatedHours, 0)
           const bloqueado = suyas.length > 0
           return (
-            <tr key={m.id} className="dt-fila">
+            <tr key={m.id} className="dt-fila dt-f-integrante">
               <td>
                 <div className="dt-nombre">
                   <Avatar nombre={m.name} indice={i} />
@@ -193,7 +193,7 @@ export function IntegrantesVista({ members, tasks, files, dispatch, absence }: P
                   />
                 </div>
               </td>
-              <td>
+              <td data-et="Horas disponibles">
                 <CeldaTexto
                   numerica
                   valor={horas(m.availableHours)}
@@ -202,8 +202,8 @@ export function IntegrantesVista({ members, tasks, files, dispatch, absence }: P
                   onGuardar={(v) => dispatch({ type: 'updateMember', id: m.id, cambios: { availableHours: leerHoras(v) } })}
                 />
               </td>
-              <td className="num dt-cuenta">{suyas.length}<span className="sr-only"> {plural(suyas.length, 'tarea', 'tareas')}</span></td>
-              <td>
+              <td className="num dt-cuenta" data-et="Tareas">{suyas.length}<span className="sr-only"> {plural(suyas.length, 'tarea', 'tareas')}</span></td>
+              <td data-et="Carga">
                 <div className="dt-carga">
                   <BarraCarga asignadas={abiertas} disponibles={m.availableHours} />
                   <button
@@ -216,13 +216,14 @@ export function IntegrantesVista({ members, tasks, files, dispatch, absence }: P
                   >
                     <Icono nombre="basura" tam={15} />
                   </button>
+                  {bloqueado && <span className="dt-motivo" aria-hidden="true">Tiene {suyas.length} {plural(suyas.length, 'tarea', 'tareas')}</span>}
                 </div>
               </td>
             </tr>
           )
         })}
         {borrador && (
-          <tr className="dt-fila dt-borrador" onBlur={alSalirDeFila}>
+          <tr className="dt-fila dt-f-integrante dt-borrador" onBlur={alSalirDeFila}>
             <td>
               <div className="dt-nombre">
                 <Avatar nombre={borrador.nombre || '?'} indice={members.length} />
@@ -240,7 +241,7 @@ export function IntegrantesVista({ members, tasks, files, dispatch, absence }: P
                 />
               </div>
             </td>
-            <td>
+            <td data-et="Horas disponibles">
               <input
                 className="cel num"
                 type="text"
@@ -254,8 +255,8 @@ export function IntegrantesVista({ members, tasks, files, dispatch, absence }: P
                 onKeyDown={alTeclaBorrador}
               />
             </td>
-            <td className="num dt-cuenta">0</td>
-            <td>
+            <td className="num dt-cuenta" data-et="Tareas">0</td>
+            <td data-et="Carga">
               <div className="dt-acciones">
                 <button type="button" className="btn btn-p" onClick={() => confirmarBorrador(true)}>Agregar</button>
                 <button type="button" className="btn btn-s" onClick={cerrarBorrador}>Cancelar</button>

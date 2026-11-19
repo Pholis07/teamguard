@@ -22,7 +22,7 @@
 .g-ap-cifra { grid-area: c; color: var(--tx); font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; min-width: 78px; }
 .g-ap-sub { grid-area: s; color: var(--tx3); font-size: 12px; text-align: right; }
 .g-ap-hecho { background: var(--ac); }
-.g-ap-prog { background: var(--tx2); }
+.g-ap-prog { background: color-mix(in srgb, var(--ac) 45%, transparent); }
 .g-ap-pend { background: transparent; border: 1.5px solid var(--tx2); box-sizing: border-box; }
 .g-ap-leyenda { margin: 0; display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--tx2); font-size: 12px; }
 .g-ap-leyenda span { display: inline-flex; align-items: center; gap: 6px; }

@@ -102,7 +102,7 @@ export function TareasVista({ members, tasks, files, dispatch, onIr }: Props) {
           const ultima = i === tasks.length - 1
           const conArchivos = files.some((f) => f.taskId === t.id)
           return (
-            <tr key={t.id} className="dt-fila">
+            <tr key={t.id} className="dt-fila dt-f-tarea">
               <td>
                 <CeldaTexto
                   valor={t.title}
@@ -112,7 +112,7 @@ export function TareasVista({ members, tasks, files, dispatch, onIr }: Props) {
                   onGuardar={(v) => dispatch({ type: 'updateTask', id: t.id, cambios: { title: v } })}
                 />
               </td>
-              <td>
+              <td data-et="Responsable">
                 <div className="dt-nombre">
                   {dueno >= 0 && <Avatar nombre={members[dueno].name} indice={dueno} />}
                   <select
@@ -126,7 +126,7 @@ export function TareasVista({ members, tasks, files, dispatch, onIr }: Props) {
                   </select>
                 </div>
               </td>
-              <td>
+              <td data-et="Horas">
                 <CeldaTexto
                   numerica
                   valor={horas(t.estimatedHours)}
@@ -135,13 +135,13 @@ export function TareasVista({ members, tasks, files, dispatch, onIr }: Props) {
                   onGuardar={(v) => dispatch({ type: 'updateTask', id: t.id, cambios: { estimatedHours: leerHoras(v) } })}
                 />
               </td>
-              <td>
+              <td data-et="Fecha límite">
                 <FechaCelda tarea={t} dispatch={dispatch} />
               </td>
-              <td>
+              <td data-et="Estado">
                 <EstadoCelda tarea={t} dispatch={dispatch} />
               </td>
-              <td>
+              <td data-et="Requiere archivo">
                 <div className="dt-archivo">
                   <label className="dt-check" title="Requiere archivo">
                     <input
@@ -161,6 +161,7 @@ export function TareasVista({ members, tasks, files, dispatch, onIr }: Props) {
                   >
                     <Icono nombre="basura" tam={15} />
                   </button>
+                  {conArchivos && <span className="dt-motivo" aria-hidden="true">Tiene archivos</span>}
                 </div>
               </td>
             </tr>

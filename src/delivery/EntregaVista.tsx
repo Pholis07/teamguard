@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { DEMO_DATE, isTaskOverdue, type Member, type Task } from '../domain'
 import { Pagina } from '../ui/bloques'
-import { plural } from '../ui/formato'
 import { actaEntrega, type Decision } from './acta'
 import { armarZip, NOMBRE_ACTA, progresoEntrega, type Entrega } from './zip'
 import './entrega.css'
@@ -46,9 +45,7 @@ export function EntregaVista({ tasks, members, files, decisiones, onAddFile }: P
         <p className="entrega-estado" role="status">
           {listas} de {total} entregas listas.{' '}
           <span className="fa">
-            {faltan > 0
-              ? `Aún ${plural(faltan, 'queda', 'quedan')} ${faltan} ${plural(faltan, 'entrega', 'entregas')} por adjuntar para descargar el ZIP.`
-              : 'Ya se puede descargar el ZIP.'}
+            {faltan > 0 ? 'Adjunta un archivo en cada tarea para descargar el ZIP.' : 'Ya se puede descargar el ZIP.'}
           </span>
         </p>
         <div className="entrega-zip">

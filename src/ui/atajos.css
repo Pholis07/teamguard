@@ -18,7 +18,9 @@ kbd, .n-kbd { display: inline-flex; align-items: center; justify-content: center
 .n-atajos-b:hover:not(:disabled) { text-decoration: underline; text-underline-offset: 3px; }
 .n-atajos-b kbd { height: 18px; min-width: 18px; padding: 0 4px; font-size: 11px; color: var(--tx2); }
 @media (hover: hover) and (min-width: 761px) {
-  .n-tecla { display: inline-flex; position: absolute; right: 38px; top: 50%; height: 18px; min-width: 18px; padding: 0 4px; margin-top: -9px; font-size: 11px; color: var(--tx2); opacity: 0; transition: opacity .12s ease-out; }
+  .n-tecla { display: inline-flex; position: absolute; right: 8px; top: 50%; height: 18px; min-width: 18px; padding: 0 4px; margin-top: -9px; font-size: 11px; color: var(--tx2); opacity: 0; transition: opacity .12s ease-out; }
   .n-item:hover .n-tecla, .n-item:focus-visible .n-tecla { opacity: 1; }
+  /* El dígito ocupa el lugar del contador mientras se apunta al ítem: así nunca se encima con «0/3». */
+  .n-item:hover .n-cuenta, .n-item:focus-visible .n-cuenta { opacity: 0; }
 }
 @media (max-width: 760px) { .n-atajos-b { display: none; } }

@@ -12,6 +12,9 @@ export function GraficaEquilibrio({ puntos }: { puntos: readonly Punto[] }) {
   const minimo = puntos.reduce((m, p, i) => (p.valor < puntos[m].valor ? i : m), 0)
   // Etiquetas de valor solo en inicio, mínimo y final (no un número en cada punto).
   const rotulados = new Set([0, minimo, puntos.length - 1])
+  // Si varias decisiones comparten hora, el eje numera los pasos (Inicio, 1, 2…) y la hora queda en el tooltip.
+  const horasRepetidas = new Set(puntos.map((p) => p.etiqueta)).size !== puntos.length
+  const eje = (p: Punto, i: number) => (i === 0 ? p.etiqueta : horasRepetidas ? String(i) : p.etiqueta)
   const resumen = puntos.map((p) => `${p.valor} en ${p.etiqueta === 'Inicio' ? 'el inicio' : `${p.etiqueta} (${p.detalle})`}`).join('; ')
 
   return (
@@ -22,13 +25,13 @@ export function GraficaEquilibrio({ puntos }: { puntos: readonly Punto[] }) {
       <polyline className="g-linea" points={puntos.map((p, i) => `${x(i)},${y(p.valor)}`).join(' ')} />
       {puntos.map((p, i) => (
         <g key={i} className="g-punto">
-          <title>{`${p.etiqueta} · equilibrio ${p.valor}/100 — ${p.detalle}`}</title>
+          <title>{`${horasRepetidas && i > 0 ? `Decisión ${i} (${p.etiqueta})` : p.etiqueta} · equilibrio ${p.valor}/100 — ${p.detalle}`}</title>
           <circle className="g-hit" cx={x(i)} cy={y(p.valor)} r={14} />
           <circle className="g-marca" cx={x(i)} cy={y(p.valor)} r={4} />
           {rotulados.has(i) && (
             <text className="g-valor" x={x(i)} y={y(p.valor) + (p.valor > 85 ? 18 : -10)} textAnchor="middle">{p.valor}</text>
           )}
-          <text className="g-eje" x={x(i)} y={ALTO - 6} textAnchor="middle">{p.etiqueta}</text>
+          <text className="g-eje" x={x(i)} y={ALTO - 6} textAnchor="middle">{eje(p, i)}</text>
         </g>
       ))}
     </svg>

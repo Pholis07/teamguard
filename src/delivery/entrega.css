@@ -2,7 +2,7 @@
 .entrega-estado { flex: 1 1 320px; margin: 0; font-size: 16px; line-height: 1.5; }
 .entrega-seccion { display: flex; flex-direction: column; gap: 8px; }
 .entrega-lista { list-style: none; margin: 0; padding: 0; }
-.entrega-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; padding: 16px 20px; font-size: 13.5px; }
+.entrega-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; padding: 16px 20px; font-size: 14px; }
 .entrega-fila + .entrega-fila { border-top: 1px solid var(--bd); }
 .entrega-tarea { display: flex; align-items: center; gap: 11px; flex: 1 1 180px; }
 .entrega-tarea > span:last-child { display: flex; flex-direction: column; line-height: 1.3; }
