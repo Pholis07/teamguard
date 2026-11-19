@@ -1,4 +1,4 @@
-/* Guion de la presentación: tarjeta flotante con los tokens de Notion (se adapta a oscuro y claro). */
+/* Guion de la presentación: tarjeta flotante (oscuro y claro). */
 .n-app:has(.guia) .n-pagina { padding-bottom: 320px; }
 .guia {
   position: fixed; right: 20px; bottom: 20px; z-index: 50; width: min(400px, calc(100vw - 24px));
@@ -16,8 +16,8 @@
 .guia-hacer { margin: 10px 0 0; color: var(--tx2); }
 .guia-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
 .guia-espacio { flex: 1; }
-.guia-pri { background: var(--ac); color: #fff; }
-.guia-pri:hover { background: #0077D4; }
+.guia-pri { background: var(--ac); color: var(--ac-on); }
+.guia-pri:hover { filter: brightness(.88); }
 .guia-sec { border-color: var(--bd); color: var(--tx); }
 .guia-sec:hover:not(:disabled) { background: var(--hover); }
 .guia-extra { flex-basis: 100%; background: var(--ac-bg); color: var(--ac-tx); }

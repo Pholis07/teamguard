@@ -1,4 +1,4 @@
-/* Compartir: diálogo con QR, en la piel de Notion (menú flotante). */
+/* Compartir: diálogo con QR (menú flotante). */
 .compartir { width: min(360px, calc(100vw - 32px)); padding: 24px; margin: auto; color: var(--tx); background: var(--bg); border: 1px solid var(--bd); border-radius: 8px; box-shadow: var(--pop); text-align: center; font-family: var(--fuente); }
 .compartir::backdrop { background: rgba(0, 0, 0, .5); }
 .compartir-h { margin-bottom: 6px; font-size: 1.25em; font-weight: 600; }

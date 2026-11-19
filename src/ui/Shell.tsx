@@ -42,19 +42,14 @@ export function Shell({ pagina, proyecto, contadores, tema, onNavegar, onTema, o
           <span className="n-ws-txt"><b>TeamGuard</b><span>{proyecto.nombre}</span></span>
           <Icono nombre="chevron" tam={14} />
         </button>
-        <label className="n-buscar">
-          <Icono nombre="buscar" tam={14} />
-          <input type="text" placeholder="Buscar" disabled aria-label="Buscar (no disponible)" />
-          <kbd>Ctrl+K</kbd>
-        </label>
         <button type="button" className="n-item" onClick={cerrandoAntes(onInicio)}>
-          <span className="n-item-e" aria-hidden="true">🏠</span><span className="n-item-t">Inicio</span>
+          <span className="n-item-e" aria-hidden="true"><Icono nombre="inicio" /></span><span className="n-item-t">Inicio</span>
         </button>
         <p className="n-etq">Proyecto</p>
         <nav aria-label="Páginas del proyecto">
           {PAGINAS.map((p) => (
             <button key={p.id} type="button" className="n-item" aria-current={pagina === p.id ? 'page' : undefined} onClick={cerrandoAntes(() => onNavegar(p.id))}>
-              <span className="n-item-e" aria-hidden="true">{p.emoji}</span>
+              <span className="n-item-e" aria-hidden="true"><Icono nombre={p.icono} /></span>
               <span className="n-item-t">{p.label}</span>
               {cuentas[p.id] !== undefined && <span className="n-cuenta">{cuentas[p.id]}</span>}
             </button>
@@ -62,7 +57,7 @@ export function Shell({ pagina, proyecto, contadores, tema, onNavegar, onTema, o
         </nav>
         <div className="n-flex" />
         <button type="button" className="n-item" role="switch" aria-checked={tema === 'oscuro'} onClick={onTema}>
-          <span className="n-item-e" aria-hidden="true">{tema === 'oscuro' ? '🌙' : '☀️'}</span>
+          <span className="n-item-e" aria-hidden="true"><Icono nombre={tema === 'oscuro' ? 'luna' : 'sol'} /></span>
           <span className="n-item-t">{tema === 'oscuro' ? 'Oscuro' : 'Claro'}</span>
         </button>
         <p className="n-lema">El trabajo es de todos. La responsabilidad también.</p>
@@ -73,9 +68,9 @@ export function Shell({ pagina, proyecto, contadores, tema, onNavegar, onTema, o
         <header className="n-top">
           <button type="button" className="n-menu" aria-label="Abrir menú" aria-expanded={abierto} onClick={() => setAbierto(true)}><Icono nombre="menu" tam={18} /></button>
           <nav className="n-migas" aria-label="Ubicación">
-            <span>🐯 {proyecto.nombre}</span>
+            <span>{proyecto.nombre}</span>
             <span className="sep" aria-hidden="true">/</span>
-            <b aria-current="page">{actual?.emoji} {actual?.label}</b>
+            <b aria-current="page">{actual && <Icono nombre={actual.icono} />}{actual?.label}</b>
           </nav>
           <span className="n-top-der">
             <span className="n-estado">{proyecto.ejemplo ? 'Datos de ejemplo' : 'Proyecto nuevo'}</span>

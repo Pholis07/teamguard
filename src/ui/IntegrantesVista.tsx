@@ -97,7 +97,7 @@ export function IntegrantesVista({ members, tasks, dispatch }: Props) {
 
   return (
     <Pagina
-      icono="👥"
+      icono="integrantes"
       titulo="Integrantes"
       propiedades={<Propiedades items={[
         { icono: 'personas', etiqueta: 'Integrantes', valor: <span className="num">{members.length}</span> },
@@ -105,7 +105,7 @@ export function IntegrantesVista({ members, tasks, dispatch }: Props) {
       ]} />}
     >
       {members.length === 0 && !borrador && (
-        <Callout icono="💡">Agrega a las personas del equipo y cuántas horas pueden dar hasta la entrega.</Callout>
+        <Callout icono="info">Agrega a las personas del equipo y cuántas horas pueden dar hasta la entrega.</Callout>
       )}
       <BaseDeDatos
         columnas={[

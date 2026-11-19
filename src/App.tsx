@@ -9,6 +9,7 @@ import { ahora, type PaginaId, type Tema } from './ui/formato'
 import { Icono } from './ui/bloques'
 import { Shell } from './ui/Shell'
 import { Inicio } from './ui/Inicio'
+import { CrearEspacio } from './ui/CrearEspacio'
 import { TableroVista } from './ui/TableroVista'
 import { IntegrantesVista } from './ui/IntegrantesVista'
 import { TareasVista } from './ui/TareasVista'
@@ -64,12 +65,28 @@ export default function App() {
       ? { label: 'Completar el Resumen', onClick: () => muestra('t3', 'm3', 'resumen.txt', 'Resumen de Sol (ejemplo).') }
       : undefined
 
-  if (estado.fase === 'inicio' || !estado.proyecto) {
+  if (estado.fase === 'inicio') {
     return (
       <Inicio
         tema={tema}
         onTema={alternarTema}
-        onEmpezar={(nombre) => {
+        onEmpezar={() => {
+          setPagina('tablero')
+          dispatch({ type: 'entrar' })
+        }}
+        onEjemplo={() => {
+          setPagina('tablero')
+          dispatch({ type: 'cargarEjemplo' })
+        }}
+      />
+    )
+  }
+
+  if (!estado.proyecto) {
+    return (
+      <CrearEspacio
+        tema={tema}
+        onCrear={(nombre) => {
           setPagina('tablero')
           dispatch({ type: 'iniciar', nombre })
         }}
@@ -77,6 +94,7 @@ export default function App() {
           setPagina('tablero')
           dispatch({ type: 'cargarEjemplo' })
         }}
+        onVolver={() => dispatch({ type: 'salir' })}
       />
     )
   }
