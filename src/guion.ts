@@ -13,8 +13,8 @@ export type Paso = {
 export const PASOS: readonly Paso[] = [
   {
     desde: 0, hasta: 10, titulo: 'El problema', vista: 'tablero',
-    decir: 'En muchos proyectos, el problema no es solo organizar tareas: es que el equipo no sabe cuándo se está saturando o cómo reaccionar ante un imprevisto. Aquí el equilibrio está en 100: todo cabe.',
-    hacer: 'Muestra el Tablero: tres integrantes, su carga y la ficha «Equilibrio 100/100».',
+    decir: 'En muchos proyectos, el equipo no sabe cuándo se está saturando ni cómo reaccionar ante un imprevisto. Aquí el equilibrio está en 100, y si alguien falta, TeamGuard ya sabe quién lo cubre.',
+    hacer: 'Señala «Equilibrio 100/100» y pulsa «¿Y si alguien falta?»: cualquiera se puede cubrir.',
   },
   {
     desde: 10, hasta: 25, titulo: 'Sobrecarga', vista: 'tablero',
