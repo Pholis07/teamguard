@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react'
 import { calculateLoads, isTaskOverdue, simulateAssignment, type Member, type RuleContext, type Task } from '../domain'
 import { serieEquilibrio, type Decision } from '../delivery/acta'
+import type { Entrega } from '../delivery/zip'
+import { aporte } from './aporte'
+import { GraficaAporte } from './GraficaAporte'
 import { GraficaEquilibrio } from './GraficaEquilibrio'
 import { BarraCarga, BaseDeDatos, Callout, Checklist, Etiqueta, Icono, Pagina, Propiedades, Toggle } from './bloques'
 import { equilibrio } from './equilibrio'
@@ -11,6 +14,7 @@ type Props = {
   proyecto: string
   members: readonly Member[]
   tasks: readonly Task[]
+  files: readonly Entrega[]
   /** Contexto de reglas (incluye la ausencia) para el índice de equilibrio. */
   contexto: RuleContext
   /** Bitácora: alimenta la gráfica del equilibrio en el tiempo. */
@@ -28,7 +32,7 @@ function Avatar({ member, members, chico }: { member: Member; members: readonly 
   return <span className={`av av${i}${chico ? ' av-s' : ''}`} aria-hidden="true">{member.name[0]}</span>
 }
 
-export function TableroVista({ proyecto, members, tasks, contexto, decisiones, onIr }: Props) {
+export function TableroVista({ proyecto, members, tasks, files, contexto, decisiones, onIr }: Props) {
   const abiertas = tasks.filter((t) => t.status !== 'done')
   const [sim, setSim] = useState<{ taskId: string; candidateId: string } | null>(null)
   const [simulado, setSimulado] = useState(leerSimulo)
@@ -201,6 +205,11 @@ export function TableroVista({ proyecto, members, tasks, contexto, decisiones, o
           )
         })}
       </BaseDeDatos>
+
+      <section className="n-bd">
+        <h2 className="n-bd-tit">Aporte del equipo</h2>
+        <GraficaAporte datos={aporte(members, tasks, files)} />
+      </section>
 
       <BaseDeDatos
         titulo="Tareas"

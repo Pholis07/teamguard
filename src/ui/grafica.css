@@ -10,3 +10,36 @@
 .g-valor { fill: var(--tx); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
 /* En pantallas angostas el SVG se reduce ~40 %: se compensa para que el texto quede legible (~11 px). */
 @media (max-width: 720px) { .g-ref-t, .g-eje { font-size: 17px; } .g-valor { font-size: 19px; } }
+
+/* Aporte del equipo: barras apiladas por persona y barra de reparto. */
+.g-ap { display: flex; flex-direction: column; gap: 14px; max-width: 640px; font-family: var(--fuente); font-size: 13px; color: var(--tx2); }
+.g-ap-filas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.g-ap-fila { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; grid-template-areas: 'n b c' '. . s'; column-gap: 12px; row-gap: 2px; align-items: center; }
+.g-ap-nombre { grid-area: n; font-size: 14px; color: var(--tx); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.g-ap-pista { grid-area: b; height: 16px; display: block; }
+.g-ap-barra { display: flex; height: 100%; gap: 2px; transform-origin: left; animation: g-ap-crece 280ms cubic-bezier(.23, 1, .32, 1) both; }
+.g-ap-barra > span { min-width: 3px; }
+.g-ap-cifra { grid-area: c; color: var(--tx); font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; min-width: 78px; }
+.g-ap-sub { grid-area: s; color: var(--tx3); font-size: 12px; text-align: right; }
+.g-ap-hecho { background: var(--tx); }
+.g-ap-prog { background: var(--tx2); }
+.g-ap-pend { background: transparent; border: 1px solid var(--tx3); box-sizing: border-box; }
+.g-ap-reparto { display: flex; flex-direction: column; gap: 6px; }
+.g-ap-tit { color: var(--tx3); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+.g-ap-rbarra { display: flex; gap: 2px; height: 28px; }
+.g-ap-seg { min-width: 0; display: flex; align-items: center; padding: 0 8px; overflow: hidden; border-radius: 2px; animation: g-ap-crece 280ms cubic-bezier(.23, 1, .32, 1) both; transform-origin: left; }
+/* El reparto no usa los rellenos de la leyenda (hecho/en progreso): solo contorno, para no confundirlos. */
+.g-ap-seg { background: var(--card); border: 1px solid var(--bd); color: var(--tx); }
+.g-ap-seg:first-child { border-color: var(--tx3); }
+.g-ap-seg-t { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.g-ap-leyenda { margin: 0; display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--tx2); font-size: 12px; }
+.g-ap-leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+.g-ap-sw { display: inline-block; width: 12px; height: 12px; }
+.g-ap-c .g-ap-filas { gap: 8px; }
+.g-ap-c .g-ap-pista { height: 10px; }
+@keyframes g-ap-crece { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .g-ap-barra, .g-ap-seg { animation: none; } }
+@media (max-width: 480px) {
+  .g-ap-fila { grid-template-columns: 48px minmax(0, 1fr) auto; column-gap: 8px; }
+  .g-ap-cifra { min-width: 70px; }
+}

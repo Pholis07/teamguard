@@ -1,39 +1,120 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Tema } from './formato'
-import { Icono } from './bloques'
+import { Icono, type NombreIcono } from './bloques'
 import './inicio.css'
 
 type Props = { tema: Tema; onTema: () => void; onEmpezar: () => void; onEjemplo: () => void }
 
 const FUNDIDO_MS = 300
 
-/** Revela su contenido una sola vez al entrar en pantalla (opacidad + 16 px). */
+/** true mientras la pestaña está visible: los bucles se detienen al ocultarla. */
+function useActivo() {
+  const [activo, setActivo] = useState(() => typeof document === 'undefined' || !document.hidden)
+  useEffect(() => {
+    const f = () => setActivo(!document.hidden)
+    document.addEventListener('visibilitychange', f)
+    return () => document.removeEventListener('visibilitychange', f)
+  }, [])
+  return activo
+}
+
+/** true si la persona pidió menos movimiento: se muestra el estado final, sin bucles. */
+function useQuieto() {
+  const q = typeof window !== 'undefined' && typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-reduced-motion: reduce)') : null
+  const [quieto, setQuieto] = useState(!!q?.matches)
+  useEffect(() => {
+    if (!q) return
+    const f = () => setQuieto(q.matches)
+    q.addEventListener('change', f)
+    return () => q.removeEventListener('change', f)
+  }, [q])
+  return quieto
+}
+
+/** Número que cuenta hasta `meta` con requestAnimationFrame (sin movimiento: salta). */
+function useContador(meta: number, ms = 1100) {
+  const quieto = useQuieto()
+  const [v, setV] = useState(meta)
+  const actual = useRef(meta)
+  useEffect(() => {
+    if (quieto) { actual.current = meta; return }
+    const desde = actual.current
+    if (desde === meta) return
+    const t0 = performance.now()
+    let id = 0
+    const paso = (t: number) => {
+      const p = Math.min(1, (t - t0) / ms)
+      const e = 1 - Math.pow(1 - p, 3)
+      actual.current = desde + (meta - desde) * e
+      setV(Math.round(actual.current))
+      if (p < 1) id = requestAnimationFrame(paso)
+    }
+    id = requestAnimationFrame(paso)
+    return () => cancelAnimationFrame(id)
+  }, [meta, ms, quieto])
+  return quieto ? meta : v
+}
+function Cuenta({ a, ms }: { a: number; ms?: number }) { return <>{useContador(a, ms)}</> }
+
+/** Revela su contenido cada vez que entra en pantalla y lo oculta al salir, para que vuelva a animarse. */
 function Revela({ children, className = '', retraso = 0, id }: { children: ReactNode; className?: string; retraso?: number; id?: string }) {
   const ref = useRef<HTMLDivElement>(null)
-  const [visto, setVisto] = useState(false)
+  // Sin IntersectionObserver se muestra sin esperar.
+  const [visto, setVisto] = useState(() => typeof IntersectionObserver === 'undefined')
   useEffect(() => {
     const el = ref.current
-    if (!el) return
-    const r = el.getBoundingClientRect()
-    // Sin IntersectionObserver, o si ya está en pantalla al cargar: se muestra sin esperar.
-    if (typeof IntersectionObserver === 'undefined' || (r.top < window.innerHeight && r.bottom > 0)) { setVisto(true); return }
+    if (!el || typeof IntersectionObserver === 'undefined') return
     const obs = new IntersectionObserver((es) => {
-      if (es.some((e) => e.isIntersecting)) { setVisto(true); obs.disconnect() }
+      const e = es[es.length - 1]
+      if (e) setVisto(e.isIntersecting)
     }, { threshold: 0.12 })
     obs.observe(el)
     return () => obs.disconnect()
   }, [])
-  return <div ref={ref} id={id} className={`in-rev ${visto ? 'in-vis' : ''} ${className}`} style={{ transitionDelay: `${retraso}ms` }}>{children}</div>
+  return <div ref={ref} id={id} className={`in-rev ${visto ? 'in-vis' : ''} ${className}`} style={{ transitionDelay: visto ? `${retraso}ms` : '0ms' }}>{children}</div>
 }
 
-const FILAS = [
-  { n: 'Ana', c: 'Boceto', w: 75, e: '1 h libre' },
-  { n: 'Luis', c: 'Ficha', w: 33, e: '4 h libres' },
-  { n: 'Sol', c: 'Resumen', w: 50, e: '2 h libres' },
-] as const
-const HORAS = ['3/4 h', '2/6 h', '2/4 h']
+/* ---------- Vista previa del héroe: ciclo de ~12 s ---------- */
+// 0 todo cabe · 1 Ana se ausenta · 2 propuesta aceptada · 3 reacomodo · 4 pausa y reinicio
+const DUR = [2200, 2800, 2200, 3000, 1800]
+const FINAL = 3
+const EQ = [100, 57, 57, 100, 100]
+const ANA = { w: [0.75, 0, 0, 0, 0], h: ['3/4 h', 'Ausente', 'Ausente', 'Ausente', 'Ausente'], l: ['1 h libre', 'Sin tiempo', 'Sin tiempo', 'Sin tiempo', 'Sin tiempo'] }
+const LUIS = { w: [0.33, 0.33, 0.33, 0.83, 0.83], h: ['2/6 h', '2/6 h', '2/6 h', '5/6 h', '5/6 h'], l: ['4 h libres', '4 h libres', '4 h libres', '1 h libre', '1 h libre'] }
+const APORTE = [[43, 29, 28], [0, 50, 50], [0, 50, 50], [0, 71, 29], [0, 71, 29]]
+const NOMBRES = ['Ana', 'Luis', 'Sol']
+
+function Aporte({ valores, mini }: { valores: number[]; mini?: boolean }) {
+  return (
+    <div className={`in-apo ${mini ? 'in-apo-m' : ''}`}>
+      {NOMBRES.map((n, i) => (
+        <div className="in-apo-f" key={n}>
+          <span className="in-apo-n">{n}</span>
+          <span className="in-barra"><span className="in-llena" style={{ transform: `scaleX(${valores[i] / 100})` }} /></span>
+          <span className="in-apo-p num"><Cuenta a={valores[i]} ms={900} />%</span>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 function Vista() {
+  const activo = useActivo()
+  const quieto = useQuieto()
+  const [pasoV, setPaso] = useState(0)
+  const paso = quieto ? FINAL : pasoV
+  useEffect(() => {
+    if (quieto) return
+    if (!activo) return
+    const t = window.setTimeout(() => setPaso((p) => (p + 1) % DUR.length), DUR[pasoV])
+    return () => window.clearTimeout(t)
+  }, [pasoV, activo, quieto])
+
+  const eq = useContador(EQ[paso], 1400)
+  const alto = EQ[paso] < 100
+  const ausente = paso >= 1
+  const cubierta = paso >= FINAL
+  const msgs = [[0], [1], [2], [3, 4]]
   return (
     <div className="in-ventana" aria-hidden="true">
       <div className="in-vcab"><i /><i /><i /><span>TeamGuard</span></div>
@@ -43,64 +124,124 @@ function Vista() {
           <span className="on"><Icono nombre="tablero" tam={14} />Tablero</span><span><Icono nombre="tareas" tam={14} />Tareas</span><span><Icono nombre="integrantes" tam={14} />Integrantes</span><span><Icono nombre="entrega" tam={14} />Entrega</span>
         </div>
         <div className="in-vpag">
-          <h3><Icono nombre="tablero" tam={22} />Tablero</h3>
-          <p className="in-vsub">Carga por persona</p>
-          {FILAS.map((f, i) => (
+          <div className="in-vtop">
+            <div>
+              <h3><Icono nombre="tablero" tam={22} />Tablero</h3>
+              <p className="in-vsub">Carga por persona</p>
+            </div>
+            <div className={`in-eq ${alto ? 'alto' : ''}`}>
+              <small>Equilibrio</small>
+              <span className="in-eq-n num">{eq}</span>
+              <span className="in-eq-t">{alto ? 'Riesgo Alto' : 'Riesgo Bajo'}</span>
+            </div>
+          </div>
+          {[
+            { n: 'Ana', d: ANA, chips: <span className={`in-chip ${ausente ? 'al' : ''} ${cubierta ? 'fuera' : ''}`}>{ausente ? 'Boceto · Sin cubrir' : 'Boceto'}</span> },
+            { n: 'Luis', d: LUIS, chips: <><span className="in-chip">Ficha</span><span className={`in-chip nuevo ${cubierta ? 'dentro' : ''}`}>Boceto</span></> },
+            { n: 'Sol', d: { w: [0.5, 0.5, 0.5, 0.5, 0.5], h: Array(5).fill('2/4 h'), l: Array(5).fill('2 h libres') }, chips: <span className="in-chip">Resumen</span> },
+          ].map((f) => (
             <div className="in-fila" key={f.n}>
-              <span className="in-fn">{f.n} <span className="num fa">{HORAS[i]}</span><small>{f.c}</small></span>
-              <span className="in-barra"><span style={{ ['--w' as string]: `${f.w}%`, ['--d' as string]: `${1300 + i * 150}ms` }} className="in-llena" /></span>
-              <span className="tag tag-gris">{f.e}</span>
+              <span className="in-fn">{f.n} <span className="num fa">{f.d.h[paso]}</span><small className="in-chips">{f.chips}</small></span>
+              <span className="in-barra"><span className="in-llena" style={{ transform: `scaleX(${f.d.w[paso]})` }} /></span>
+              <span className={`tag tag-gris in-et ${f.n === 'Ana' && ausente ? 'al' : ''}`}>{f.d.l[paso]}</span>
             </div>
           ))}
-          <div className="in-vprop"><Icono nombre="alerta" tam={14} /><span><b>Ana se ausenta</b> · Propuesta: Luis cubre Boceto (2 → 5 de 6 h). Tú decides.</span></div>
+          <div className="in-vabajo">
+            <div className="in-vcaja">
+              <small>Aporte</small>
+              <Aporte valores={APORTE[paso]} mini />
+            </div>
+            <div className="in-vprop">
+              <div className={`in-m ${msgs[0].includes(paso) ? 'on' : ''}`}><Icono nombre="check" tam={14} /><span><b>Todo cabe</b> en el tiempo real de cada quien.</span></div>
+              <div className={`in-m al ${msgs[1].includes(paso) ? 'on' : ''}`}><Icono nombre="alerta" tam={14} /><span><b>Ana se ausenta</b> · Boceto queda sin cubrir.</span></div>
+              <div className={`in-m ${msgs[2].includes(paso) ? 'on' : ''}`}><Icono nombre="contingencia" tam={14} /><span><b>Luis cubre Boceto</b> (2 → 5 de 6 h) <span className="in-ok">Aceptada</span></span></div>
+              <div className={`in-m ${msgs[3].includes(paso) ? 'on' : ''}`}><Icono nombre="check" tam={14} /><span><b>Cobertura aplicada.</b> Decidió una persona.</span></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   )
 }
 
-function DibujoCarga() {
+/* ---------- Cinta continua ---------- */
+const EVENTOS: { i: NombreIcono; t: string; al?: boolean }[] = [
+  { i: 'ausencia', t: 'Ana se ausenta', al: true },
+  { i: 'integrantes', t: 'Luis cubre Boceto' },
+  { i: 'tablero', t: 'Equilibrio 57 → 100' },
+  { i: 'check', t: 'Sol entregó Resumen' },
+  { i: 'entrega', t: 'ZIP listo' },
+  { i: 'simular', t: 'Simulación sin riesgo' },
+  { i: 'candado', t: 'El motivo de una ausencia no se guarda' },
+  { i: 'persona', t: 'Decide una persona' },
+]
+function Cinta() {
+  const grupo = (oculto: boolean) => (
+    <ul className="in-grupo" aria-hidden={oculto || undefined}>
+      {EVENTOS.map((e) => <li key={e.t} className={e.al ? 'al' : ''}><Icono nombre={e.i} tam={16} />{e.t}</li>)}
+    </ul>
+  )
   return (
-    <svg viewBox="0 0 240 130" className="in-dib" aria-hidden="true">
-      <rect x="1" y="1" width="238" height="128" rx="10" className="d-caja" />
-      {[0, 1, 2, 3].map((i) => (
-        <g key={i} transform={`translate(18 ${22 + i * 26})`}>
-          <circle cx="6" cy="6" r="6" className="d-suave" />
-          <rect x="22" y="1" width="150" height="10" rx="5" className="d-pista" />
-          <rect x="22" y="1" width={[70, 105, 150, 58][i]} height="10" rx="5" className={i === 2 ? 'd-fuerte' : 'd-medio'} />
-        </g>
-      ))}
-    </svg>
+    <div className="in-cinta" role="group" aria-label="Eventos de ejemplo de un equipo">
+      <div className="in-pista">{grupo(false)}{grupo(true)}</div>
+    </div>
   )
 }
-function DibujoCobertura() {
+
+/* ---------- Bento ---------- */
+function CardAporte({ onEjemplo }: { onEjemplo: () => void }) {
+  const activo = useActivo()
+  const quieto = useQuieto()
+  const [alt, setAlt] = useState(false)
+  useEffect(() => {
+    if (quieto || !activo) return
+    const t = window.setInterval(() => setAlt((v) => !v), 3200)
+    return () => window.clearInterval(t)
+  }, [activo, quieto])
   return (
-    <svg viewBox="0 0 240 130" className="in-dib" aria-hidden="true">
-      <rect x="1" y="1" width="238" height="128" rx="10" className="d-caja" />
-      <rect x="16" y="22" width="92" height="86" rx="8" className="d-pista" />
-      <rect x="132" y="22" width="92" height="86" rx="8" className="d-suave" />
-      {[0, 1, 2].map((i) => <rect key={i} x="26" y={34 + i * 22} width={[60, 44, 52][i]} height="10" rx="5" className="d-medio" />)}
-      {[0, 1, 2].map((i) => <rect key={i} x="142" y={34 + i * 22} width={[40, 38, 36][i]} height="10" rx="5" className="d-medio" />)}
-      <rect x="142" y="88" width="72" height="10" rx="5" className="d-fuerte" />
-      <path d="M114 65h12m-5-5 5 5-5 5" className="d-trazo" />
-    </svg>
+    <article className="in-card in-grande-c" id="tablero" style={{ ['--k' as string]: 0 }}>
+      <div className="in-card-t">
+        <h3>Ve cuánto aporta cada quien</h3>
+        <p>La carga de cada persona y su parte del trabajo, a la vista. Si alguien se ausenta, el reparto cambia y el equilibrio te lo dice.</p>
+        <button type="button" className="in-pildora" onClick={onEjemplo}>Ver cómo <Icono nombre="flecha" tam={14} /></button>
+      </div>
+      <div className="in-card-v" aria-hidden="true">
+        <div className="in-apo-cab"><small>Aporte por persona · % de las horas</small><small className="in-apo-cap">{alt ? 'Ana ausente · Luis cubre' : 'Reparto normal'}</small></div>
+        <Aporte valores={alt ? APORTE[3] : APORTE[0]} />
+        <div className="in-apo-eq"><span>Equilibrio</span><b className={`num ${alt ? '' : ''}`}><Cuenta a={100} /></b><span className="in-eq-t">Riesgo Bajo</span></div>
+      </div>
+    </article>
   )
 }
-function DibujoZip() {
+
+function CardCobertura({ onEjemplo }: { onEjemplo: () => void }) {
   return (
-    <svg viewBox="0 0 240 130" className="in-dib" aria-hidden="true">
-      <rect x="1" y="1" width="238" height="128" rx="10" className="d-caja" />
-      {[0, 1, 2].map((i) => (
-        <g key={i} transform={`translate(18 ${20 + i * 30})`}>
-          <rect width="22" height="24" rx="4" className="d-suave" />
-          <rect x="32" y="7" width={[80, 64, 72][i]} height="10" rx="5" className="d-medio" />
-        </g>
-      ))}
-      <path d="M142 65h20m-6-6 6 6-6 6" className="d-trazo" />
-      <rect x="172" y="34" width="52" height="62" rx="8" className="d-fuerte" />
-      <path d="M198 34v30" className="d-cierre" />
-      <text x="198" y="86" textAnchor="middle" className="d-txt">ZIP</text>
-    </svg>
+    <article className="in-card" id="contingencia" style={{ ['--k' as string]: 1 }}>
+      <div className="in-ciclo in-cob" aria-hidden="true">
+        <div className="in-av in-av-a"><span>A</span><i /></div>
+        <div className="in-via"><span className="in-tarea">Boceto</span></div>
+        <div className="in-av in-av-l"><span>L</span><small className="num">5/6 h</small></div>
+      </div>
+      <h3>Cubre una ausencia</h3>
+      <p>Si alguien falta, ves una propuesta de reparto, antes y después, para aprobarla o cambiarla.</p>
+      <button type="button" className="in-pildora" onClick={onEjemplo}>Ver cómo <Icono nombre="flecha" tam={14} /></button>
+    </article>
+  )
+}
+
+function CardEntrega({ onEjemplo }: { onEjemplo: () => void }) {
+  return (
+    <article className="in-card" id="entrega" style={{ ['--k' as string]: 2 }}>
+      <div className="in-ciclo in-ent" aria-hidden="true">
+        <div className="in-arch">
+          {['boceto.fig', 'ficha.pdf', 'resumen.docx'].map((f, i) => <span key={f} className="in-fi" style={{ ['--j' as string]: i }}><Icono nombre="texto" tam={13} />{f}</span>)}
+        </div>
+        <div className="in-zip"><Icono nombre="entrega" tam={22} /><b>ZIP</b><span className="in-listo"><Icono nombre="check" tam={12} />listo</span></div>
+      </div>
+      <h3>Une las entregas en un ZIP</h3>
+      <p>Los archivos de cada integrante se reúnen en un solo paquete, tal como se subieron.</p>
+      <button type="button" className="in-pildora" onClick={onEjemplo}>Ver cómo <Icono nombre="flecha" tam={14} /></button>
+    </article>
   )
 }
 
@@ -181,8 +322,10 @@ function Barra({ tema, onTema, onEmpezar, onEjemplo, logo }: { tema: Tema; onTem
   )
 }
 
+
 export function Inicio({ tema, onTema, onEmpezar, onEjemplo }: Props) {
   const [saliendo, setSaliendo] = useState(false)
+  const activo = useActivo()
   const temporizador = useRef<number | undefined>(undefined)
   useEffect(() => () => window.clearTimeout(temporizador.current), [])
 
@@ -196,7 +339,7 @@ export function Inicio({ tema, onTema, onEmpezar, onEjemplo }: Props) {
   const empezar = () => salir(onEmpezar)
 
   return (
-    <div className={`in ${saliendo ? 'in-sale' : ''}`}>
+    <div className={`in ${saliendo ? 'in-sale' : ''} ${activo ? '' : 'in-pausa'}`}>
       <Barra tema={tema} onTema={onTema} onEmpezar={empezar} onEjemplo={ejemplo} logo={logo} />
 
       <main id="inicio">
@@ -216,21 +359,14 @@ export function Inicio({ tema, onTema, onEmpezar, onEjemplo }: Props) {
           <div className="in-vista in-e" style={{ ['--i' as string]: 6 }}><Vista /></div>
         </section>
 
+        <Cinta />
+
         <Revela className="in-seccion">
           <h2 className="sr-only">Funciones</h2>
-          <div className="in-cols">
-            {[
-              { id: 'tablero', d: <DibujoCarga />, t: 'Detecta la sobrecarga', p: 'Las barras de carga muestran quién va al límite antes de que el trabajo se acumule.' },
-              { id: 'contingencia', d: <DibujoCobertura />, t: 'Cubre una ausencia', p: 'Si alguien falta, ves una propuesta de reparto, antes y después, para aprobarla o cambiarla.' },
-              { id: 'entrega', d: <DibujoZip />, t: 'Une las entregas en un ZIP', p: 'Los archivos de cada integrante se reúnen en un solo paquete, tal como se subieron.' },
-            ].map((c) => (
-              <article className="in-col" key={c.t} id={c.id}>
-                {c.d}
-                <h3>{c.t}</h3>
-                <p>{c.p}</p>
-                <button type="button" className="in-pildora" onClick={ejemplo}>Ver cómo <Icono nombre="flecha" tam={14} /></button>
-              </article>
-            ))}
+          <div className="in-bento">
+            <CardAporte onEjemplo={ejemplo} />
+            <CardCobertura onEjemplo={ejemplo} />
+            <CardEntrega onEjemplo={ejemplo} />
           </div>
         </Revela>
 

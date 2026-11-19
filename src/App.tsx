@@ -126,8 +126,8 @@ export default function App() {
         </>
       }
     >
-      {pagina === 'tablero' && <TableroVista proyecto={proyecto.nombre} members={members} tasks={tasks} contexto={contexto} decisiones={estado.decisiones} onIr={setPagina} />}
-      {pagina === 'integrantes' && <IntegrantesVista members={members} tasks={tasks} dispatch={dispatch} />}
+      {pagina === 'tablero' && <TableroVista proyecto={proyecto.nombre} members={members} tasks={tasks} files={estado.files} contexto={contexto} decisiones={estado.decisiones} onIr={setPagina} />}
+      {pagina === 'integrantes' && <IntegrantesVista members={members} tasks={tasks} files={estado.files} dispatch={dispatch} />}
       {pagina === 'tareas' && <TareasVista members={members} tasks={tasks} files={estado.files} dispatch={dispatch} onIr={setPagina} />}
       {pagina === 'contingencia' && (
         <ContingenciaVista

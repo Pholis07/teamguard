@@ -1,11 +1,14 @@
 import { useState, type Dispatch, type FocusEvent, type KeyboardEvent } from 'react'
 import type { Member, Task } from '../domain'
+import type { Entrega } from '../delivery/zip'
+import { aporte } from './aporte'
+import { GraficaAporte } from './GraficaAporte'
 import type { Accion } from './estado'
 import { BarraCarga, BaseDeDatos, Callout, Icono, Pagina, Propiedades } from './bloques'
 import { horas, horasValidas, nombreValido, plural } from './formato'
 import './datos.css'
 
-type Props = { members: readonly Member[]; tasks: readonly Task[]; dispatch: Dispatch<Accion> }
+type Props = { members: readonly Member[]; tasks: readonly Task[]; files: readonly Entrega[]; dispatch: Dispatch<Accion> }
 
 /** Lee horas escritas por una persona («4», «2,5»). Vacío o texto no numérico da NaN. */
 const leerHoras = (s: string) => (s.trim() === '' ? NaN : Number(s.trim().replace(',', '.')))
@@ -70,7 +73,7 @@ export function CeldaTexto({ valor, etiqueta, onGuardar, validar, numerica, auto
 
 type Borrador = { nombre: string; horas: string }
 
-export function IntegrantesVista({ members, tasks, dispatch }: Props) {
+export function IntegrantesVista({ members, tasks, files, dispatch }: Props) {
   const [borrador, setBorrador] = useState<Borrador | null>(null)
   const [errorBorrador, setErrorBorrador] = useState<string | null>(null)
 
@@ -107,6 +110,7 @@ export function IntegrantesVista({ members, tasks, dispatch }: Props) {
       {members.length === 0 && !borrador && (
         <Callout icono="info">Agrega a las personas del equipo y cuántas horas pueden dar hasta la entrega.</Callout>
       )}
+      {members.length > 0 && tasks.length > 0 && <GraficaAporte compacta datos={aporte(members, tasks, files)} />}
       <BaseDeDatos
         columnas={[
           { icono: 'texto', nombre: 'Nombre' },
