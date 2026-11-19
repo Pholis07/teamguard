@@ -1,10 +1,18 @@
 import { useMemo, useState } from 'react'
-import { calculateLoads, simulateAssignment, type Member, type Task } from '../domain'
+import { calculateLoads, simulateAssignment, type Member, type RuleContext, type Task } from '../domain'
 import { BarraCarga, BaseDeDatos, Callout, Checklist, Etiqueta, Icono, Pagina, Propiedades, Toggle } from './bloques'
+import { equilibrio } from './equilibrio'
 import { COLOR_RIESGO, ESTADO_TAREA, fecha, horas, miembroPorId, pct, plural, type PaginaId } from './formato'
 import './paginas.css'
 
-type Props = { proyecto: string; members: readonly Member[]; tasks: readonly Task[]; onIr: (pagina: PaginaId) => void }
+type Props = {
+  proyecto: string
+  members: readonly Member[]
+  tasks: readonly Task[]
+  /** Contexto de reglas (incluye la ausencia) para el índice de equilibrio. */
+  contexto: RuleContext
+  onIr: (pagina: PaginaId) => void
+}
 
 /** Recuerda durante la sesión que ya se simuló (la vista se desmonta al cambiar de página). */
 const CLAVE_SIM = 'tg-simulo'
@@ -16,7 +24,7 @@ function Avatar({ member, members, chico }: { member: Member; members: readonly 
   return <span className={`av av${i}${chico ? ' av-s' : ''}`} aria-hidden="true">{member.name[0]}</span>
 }
 
-export function TableroVista({ proyecto, members, tasks, onIr }: Props) {
+export function TableroVista({ proyecto, members, tasks, contexto, onIr }: Props) {
   const abiertas = tasks.filter((t) => t.status !== 'done')
   const [sim, setSim] = useState<{ taskId: string; candidateId: string } | null>(null)
   const [simulado, setSimulado] = useState(leerSimulo)
@@ -78,9 +86,10 @@ export function TableroVista({ proyecto, members, tasks, onIr }: Props) {
     if (candidato) setSim({ taskId, candidateId: candidato })
   }
 
-  const tareasDe = (id: string) =>
-    (simulacion ? tasks.map((t) => (t.id === simulacion.taskId ? { ...t, ownerId: simulacion.candidateId } : t)) : tasks)
-      .filter((t) => t.ownerId === id && t.status !== 'done')
+  const tareasSim = simulacion ? tasks.map((t) => (t.id === simulacion.taskId ? { ...t, ownerId: simulacion.candidateId } : t)) : tasks
+  const tareasDe = (id: string) => tareasSim.filter((t) => t.ownerId === id && t.status !== 'done')
+  const eq = equilibrio(contexto)
+  const eqSim = simulacion ? equilibrio({ ...contexto, tasks: tareasSim }) : null
 
   return (
     <Pagina
@@ -88,6 +97,12 @@ export function TableroVista({ proyecto, members, tasks, onIr }: Props) {
       titulo="Tablero"
       propiedades={
         <Propiedades items={[
+          { icono: 'escudo', etiqueta: 'Equilibrio', valor: (
+            <span className="num" title="Porcentaje de las horas abiertas que caben en el tiempo real de su responsable">
+              {eqSim && eqSim.indice !== eq.indice ? <>{eq.indice} → <b>{eqSim.indice}</b></> : eq.indice}/100
+              <span className="fa"> · {horas((eqSim ?? eq).caben)} de {horas((eqSim ?? eq).total)} h caben</span>
+            </span>
+          ) },
           { icono: 'estado', etiqueta: 'Riesgo', valor: <Etiqueta color={COLOR_RIESGO[alto ? 'Alto' : 'Bajo']}>{alto ? 'Alto' : 'Bajo'}</Etiqueta> },
           { icono: 'calendario', etiqueta: 'Entrega', valor: entrega ? fecha(entrega) : '—' },
           { icono: 'personas', etiqueta: 'Integrantes', valor: (
@@ -129,7 +144,7 @@ export function TableroVista({ proyecto, members, tasks, onIr }: Props) {
           </p>
           <p className="p-parr">
             {sobreSim.length > 0
-              ? `${sobreSim.map((c) => `${miembroPorId(members, c.memberId)?.name} pasaría a ${horas(c.assignedHours)} de ${horas(c.availableHours)} h (${pct(c.percentage)})`).join('; ')}. ${alternativa}Nada cambia hasta que alguien lo decida.`
+              ? `${sobreSim.map((c) => `${miembroPorId(members, c.memberId)?.name} pasaría a ${horas(c.assignedHours)} de ${horas(c.availableHours)} h (${pct(c.percentage)})`).join('; ')}. ${eqSim && eqSim.indice < eq.indice ? `El equilibrio bajaría de ${eq.indice} a ${eqSim.indice}. ` : ''}${alternativa}Nada cambia hasta que alguien lo decida.`
               : 'Cabe sin sobrecargar a nadie. Nada cambia hasta que alguien lo decida.'}
           </p>
           <div className="p-acciones">
