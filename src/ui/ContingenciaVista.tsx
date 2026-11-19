@@ -6,7 +6,7 @@ import {
 } from '../domain'
 import { BarraCarga, Callout, Etiqueta, Icono, Pagina, Propiedades } from './bloques'
 import { equilibrio } from './equilibrio'
-import { COLOR_RIESGO, fecha, fechaValida, horas, miembroPorId, rango } from './formato'
+import { COLOR_RIESGO, fecha, fechaValida, horas, miembroPorId, pct, rango } from './formato'
 import './paginas.css'
 
 type Props = {
@@ -144,6 +144,14 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
           {error && <p className="p-error" role="alert">{error}</p>}
           <p className="p-nota">El motivo es privado; solo se guardan las fechas.</p>
         </Callout>
+        <section className="n-bd">
+          <h2 className="p-sub">Qué pasa al registrarla</h2>
+          <ol className="p-pasos">
+            <li><b>TeamGuard busca las tareas sin cubrir</b>Las que la persona tenía asignadas durante esas fechas.</li>
+            <li><b>Propone quién cabe</b>Elige a quien tiene horas libres y muestra la carga antes y después.</li>
+            <li><b>Tú decides</b>Aceptas, editas o rechazas. Nada cambia hasta entonces.</li>
+          </ol>
+        </section>
       </Pagina>
     )
   }
@@ -152,6 +160,7 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
   const nuevo = propuesta ? miembroPorId(members, propuesta.candidateId) : undefined
   const dueno = propuesta ? miembroPorId(members, propuesta.currentOwnerId) : undefined
   const riesgo = equilibrio(contexto).riesgo
+  const despuesNuevo = propuesta?.projectedLoads.find((c) => c.memberId === propuesta.candidateId)
 
   return (
     <Pagina
@@ -167,7 +176,7 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
       }
     >
       <div className="p-acciones">
-        <button type="button" className="btn btn-g p-suelto" onClick={() => { reiniciar(); onSetAbsence(null) }}>Quitar ausencia</button>
+        <button type="button" className="btn btn-s" onClick={() => { reiniciar(); onSetAbsence(null) }}><Icono nombre="x" />Quitar ausencia</button>
       </div>
 
       {confirmacion}
@@ -231,6 +240,11 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
               )
             })}
           </div>
+          {despuesNuevo && (
+            <p className="p-resultado num">
+              {nuevo.name} {despuesNuevo.assignedHours > despuesNuevo.availableHours ? 'pasaría a' : 'quedaría en'} {horas(despuesNuevo.assignedHours)} de {horas(despuesNuevo.availableHours)} h ({pct(despuesNuevo.percentage)}), {despuesNuevo.assignedHours > despuesNuevo.availableHours ? 'por encima de su tiempo' : 'dentro de su tiempo'}.
+            </p>
+          )}
 
           {modo === 'editar' && (
             <fieldset className="p-radios">
@@ -255,7 +269,7 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
           <div className="p-acciones">
             <button type="button" className="btn btn-p" onClick={() => aceptar(propuesta)}>Aceptar</button>
             <button type="button" className="btn btn-s" onClick={() => setModo(modo === 'editar' ? 'propuesta' : 'editar')}>{modo === 'editar' ? 'Listo' : 'Editar'}</button>
-            <button type="button" className="btn btn-g" onClick={() => rechazar(propuesta)}>Rechazar</button>
+            <button type="button" className="btn btn-s" onClick={() => rechazar(propuesta)}>Rechazar</button>
           </div>
         </section>
       )}

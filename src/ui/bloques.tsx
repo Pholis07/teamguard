@@ -217,8 +217,12 @@ export function BarraCarga({ asignadas, disponibles, soloBarra }: { asignadas: n
 }
 
 /** Tabla. `children` son filas `<tr>` (usa `.cel` en inputs para edición en línea). Con `onNueva` agrega «+ Nueva». */
-export function BaseDeDatos({ titulo, columnas, onNueva, textoNueva = 'Nueva', vacio, children }: {
+export function BaseDeDatos({ titulo, subtitulo, apilada, columnas, onNueva, textoNueva = 'Nueva', vacio, children }: {
   titulo?: ReactNode
+  /** Aclara qué mide la tabla («% de su tiempo disponible»). */
+  subtitulo?: ReactNode
+  /** En móvil cada fila pasa a ser una tarjeta en vez de desplazarse. */
+  apilada?: boolean
   columnas: { icono?: NombreIcono; nombre: string; ancho?: string }[]
   onNueva?: () => void
   textoNueva?: string
@@ -229,8 +233,8 @@ export function BaseDeDatos({ titulo, columnas, onNueva, textoNueva = 'Nueva', v
   return (
     <section className="n-bd">
       {titulo && <h2 className="n-bd-tit">{titulo}</h2>}
-      <div className="n-bd-cab"><span className="n-bd-vista"><Icono nombre="tabla" tam={14} />Tabla</span></div>
-      <div className="n-bd-marco">
+      {subtitulo && <p className="n-bd-sub">{subtitulo}</p>}
+      <div className={apilada ? 'n-bd-marco n-apilada' : 'n-bd-marco'}>
         <table className="n-tabla">
           <thead>
             <tr>{columnas.map((c) => <th key={c.nombre} style={c.ancho ? { width: c.ancho } : undefined}>{c.nombre}</th>)}</tr>

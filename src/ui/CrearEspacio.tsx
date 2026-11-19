@@ -23,6 +23,7 @@ export function CrearEspacio({ tema, acento, onAcento, version, onCambiarVersion
   return (
     <main className="ce">
       <form className="ce-tarjeta" onSubmit={enviar} noValidate>
+        <button type="button" className="btn btn-g ce-volver" onClick={onVolver}>← Volver al inicio</button>
         <img src={logo} alt="" width="48" height="48" />
         <p className="ce-eyebrow">Nuevo espacio</p>
         <h1>Crea tu espacio</h1>
@@ -35,9 +36,8 @@ export function CrearEspacio({ tema, acento, onAcento, version, onCambiarVersion
         {intento && invalido && <p id="ce-err" className="ce-error" role="alert">Escribe un nombre para continuar.</p>}
         <button type="submit" className="btn btn-p ce-crear">Crear espacio</button>
         <button type="button" className="btn btn-g ce-sec" onClick={onEjemplo}>Usar datos de ejemplo</button>
+        <div className="ce-acento"><span>Color de acento</span><SelectorAcento acento={acento} onAcento={onAcento} /></div>
       </form>
-      <div className="ce-acento"><span>Color de acento</span><SelectorAcento acento={acento} onAcento={onAcento} /></div>
-      <button type="button" className="btn btn-g ce-volver" onClick={onVolver}>← Volver al inicio</button>
     </main>
   )
 }

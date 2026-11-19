@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useTextos } from './version'
 import { calculateLoads, isTaskOverdue, simulateAssignment, type Member, type RuleContext, type Task } from '../domain'
 import { serieEquilibrio, type Decision } from '../delivery/acta'
 import type { Entrega } from '../delivery/zip'
 import { aporte } from './aporte'
+import { useContador } from './contador'
 import { GraficaAporte } from './GraficaAporte'
 import { GraficaEquilibrio } from './GraficaEquilibrio'
 import { BarraCarga, BaseDeDatos, Callout, Checklist, Etiqueta, Icono, Pagina, Propiedades, Toggle } from './bloques'
@@ -31,6 +32,39 @@ const guardarSimulo = () => { try { sessionStorage.setItem(CLAVE_SIM, '1') } cat
 function Avatar({ member, members, chico }: { member: Member; members: readonly Member[]; chico?: boolean }) {
   const i = (members.findIndex((m) => m.id === member.id) % 3) + 1
   return <span className={`av av${i}${chico ? ' av-s' : ''}`} aria-hidden="true">{member.name[0]}</span>
+}
+
+type Eq = ReturnType<typeof equilibrio>
+
+/** Franja superior: el equilibrio como cifra grande, su significado y el siguiente paso. */
+function FranjaEquilibrio({ eq, eqSim, veredicto, alerta, accion }: { eq: Eq; eqSim: Eq | null; veredicto: string; alerta: boolean; accion: ReactNode }) {
+  const v = eqSim ?? eq
+  const n = useContador(v.indice)
+  const cambia = eqSim !== null && eqSim.riesgo !== eq.riesgo
+  return (
+    <section className="tb-hero" aria-label="Equilibrio del equipo">
+      <div className="tb-hero-num">
+        <p className="tb-eq" aria-label={`Equilibrio ${v.indice} de 100`}>
+          <span className="tb-eq-n num" aria-hidden="true">{n}</span><span className="tb-eq-de" aria-hidden="true">/100</span>
+        </p>
+        <p className="tb-hero-riesgo">
+          <span className="fa">Riesgo</span>
+          {cambia
+            ? <><Etiqueta color={COLOR_RIESGO[eq.riesgo]}>{eq.riesgo}</Etiqueta><span className="p-flecha" aria-label="pasaría a"><Icono nombre="flecha" tam={12} /></span><Etiqueta color={COLOR_RIESGO[eqSim.riesgo]}>{eqSim.riesgo}</Etiqueta></>
+            : <Etiqueta color={COLOR_RIESGO[v.riesgo]}>{v.riesgo}</Etiqueta>}
+        </p>
+      </div>
+      <div className="tb-hero-txt">
+        <p className="tb-hero-sig">
+          {eqSim
+            ? <>{horas(v.caben)} de {horas(v.total)} h cabrían en el tiempo real de cada quien <span className="fa">(ahora {horas(eq.caben)} de {horas(eq.total)})</span></>
+            : <>{horas(v.caben)} de {horas(v.total)} h caben en el tiempo real de cada quien</>}
+        </p>
+        <p className={alerta ? 'tb-veredicto tb-veredicto-a' : 'tb-veredicto'} role="status">{veredicto}</p>
+      </div>
+      {accion && <div className="tb-hero-accion">{accion}</div>}
+    </section>
+  )
 }
 
 export function TableroVista({ proyecto, members, tasks, files, contexto, decisiones, onIr }: Props) {
@@ -104,47 +138,58 @@ export function TableroVista({ proyecto, members, tasks, files, contexto, decisi
   ].filter(Boolean)
   const vencidas = abiertas.filter((t) => isTaskOverdue(t, contexto.asOf))
   const eqSim = simulacion ? equilibrio({ ...contexto, tasks: tareasSim }) : null
+  // Mientras se simula, el veredicto sale del equilibrio proyectado (misma fuente que el índice y el riesgo).
+  const problemasSim = eqSim ? [
+    eqSim.sinCubrir.length > 0 && `${eqSim.sinCubrir.map((t) => t.title).join(', ')} ${plural(eqSim.sinCubrir.length, 'quedaría', 'quedarían')} sin quién la cubra`,
+    ...eqSim.sobrecargados.map((id) => {
+      const c = proyectadas?.find((x) => x.memberId === id)
+      return `${miembroPorId(members, id)?.name} pasaría a ${pct(c?.percentage ?? null)} de su tiempo`
+    }),
+  ].filter(Boolean) : []
+  const veredicto = eqSim
+    ? (problemasSim.length > 0 ? `Simulación: ${problemasSim.join('; ')}.` : 'Simulación: nadie queda sobrecargado.')
+    : (problemas.length > 0 ? `Hay trabajo que no cabe. ${problemas.join('; ')}.` : 'Todo en orden. Nadie está sobrecargado.')
+  const alertaVeredicto = eqSim ? problemasSim.length > 0 && eqSim.indice < eq.indice : problemas.length > 0
 
   return (
     <Pagina
       icono="tablero"
       titulo="Tablero"
       propiedades={
-        <Propiedades items={[
-          { icono: 'escudo', etiqueta: 'Equilibrio', valor: (
-            <span className="num n-eqn" title="Porcentaje de las horas abiertas que caben en el tiempo real de su responsable">
-              {eqSim && eqSim.indice !== eq.indice ? <>{eq.indice} → <b>{eqSim.indice}</b></> : eq.indice}/100
-              <span className="fa"> · {horas((eqSim ?? eq).caben)} de {horas((eqSim ?? eq).total)} h caben</span>
-            </span>
-          ) },
-          { icono: 'estado', etiqueta: 'Riesgo', valor: <Etiqueta color={COLOR_RIESGO[eq.riesgo]}>{eq.riesgo}</Etiqueta> },
-          { icono: 'calendario', etiqueta: 'Entrega', valor: entrega ? fecha(entrega) : '—' },
-          { icono: 'personas', etiqueta: t.integrantes, valor: (
-            <span className="p-persona">
-              <span className="p-pila">{members.map((m) => <Avatar key={m.id} member={m} members={members} />)}</span>
-              <span className="fa num">{members.length}</span>
-            </span>
-          ) },
-          { icono: 'reloj', etiqueta: 'Horas libres', valor: <span className="num">{horas(libres)} h</span> },
-        ]} />
+        <>
+          <FranjaEquilibrio
+            eq={eq} eqSim={eqSim} veredicto={veredicto} alerta={alertaVeredicto}
+            accion={!sim && (
+              <button type="button" className="btn btn-p" onClick={abrirSimulacion} disabled={abiertas.length === 0 || members.length < 2}>
+                <Icono nombre="simular" />Simular asignación
+              </button>
+            )}
+          />
+          <Propiedades items={[
+            { icono: 'calendario', etiqueta: 'Entrega', valor: entrega ? fecha(entrega) : '—' },
+            { icono: 'personas', etiqueta: t.integrantes, valor: (
+              <span className="p-persona">
+                <span className="p-pila">{members.map((m) => <Avatar key={m.id} member={m} members={members} />)}</span>
+                <span className="fa num">{members.length}</span>
+              </span>
+            ) },
+            { icono: 'reloj', etiqueta: 'Horas libres', valor: <span className="num">{horas(libres)} h</span> },
+          ]} />
+        </>
       }
     >
-      <p className="p-estado">
-        {problemas.length > 0 ? 'Hay trabajo que no cabe.' : 'Todo en orden.'}{' '}
-        <span className="fa">{problemas.length > 0 ? `${problemas.join('; ')}.` : 'Nadie está sobrecargado.'}</span>
-      </p>
+      <div className="tb-ayudas">
+        <Toggle titulo="¿Qué es el equilibrio?">
+          <p className="p-parr">Es el porcentaje de las horas abiertas que caben en el tiempo real de quien las tiene. 100 significa que todo cabe (riesgo Bajo); de 80 a 99 hay trabajo que no cabe (Medio); menos de 80 es Alto. Las horas de alguien ausente que nadie cubre también cuentan como que no caben.</p>
+        </Toggle>
+        <Toggle titulo="¿Qué es la carga?">
+          <p className="p-parr">{t.ayudaCarga}</p>
+        </Toggle>
+      </div>
       {vencidas.length > 0 && (
         <p className="p-nota" role="status">
           <Icono nombre="alerta" tam={14} /> {vencidas.length} {plural(vencidas.length, 'tarea vencida', 'tareas vencidas')} sin terminar: {vencidas.map((t) => `${t.title} (venció el ${fecha(t.dueDate)})`).join(', ')}.
         </p>
-      )}
-
-      {!sim && (
-        <div className="p-acciones">
-          <button type="button" className="btn btn-p" onClick={abrirSimulacion} disabled={abiertas.length === 0 || members.length < 2}>
-            <Icono nombre="simular" />Simular asignación
-          </button>
-        </div>
       )}
 
       {sim && (
@@ -181,6 +226,8 @@ export function TableroVista({ proyecto, members, tasks, files, contexto, decisi
 
       <BaseDeDatos
         titulo={t.cargaEquipo}
+        subtitulo="% de su tiempo disponible"
+        apilada
         columnas={[
           { icono: 'persona', nombre: t.integrante },
           { icono: 'texto', nombre: 'Tareas abiertas' },
@@ -201,6 +248,11 @@ export function TableroVista({ proyecto, members, tasks, files, contexto, decisi
               <td>
                 <div className="p-carga">
                   <BarraCarga asignadas={vista.assignedHours} disponibles={vista.availableHours} />
+                  {vista.assignedHours <= vista.availableHours && (
+                    vista.remainingHours > 0
+                      ? <Etiqueta color="gris">{horas(vista.remainingHours)} h {plural(vista.remainingHours, 'libre', 'libres')}</Etiqueta>
+                      : <Etiqueta color="cafe">Sin tiempo</Etiqueta>
+                  )}
                 </div>
               </td>
             </tr>
@@ -209,7 +261,8 @@ export function TableroVista({ proyecto, members, tasks, files, contexto, decisi
       </BaseDeDatos>
 
       <section className="n-bd">
-        <h2 className="n-bd-tit">Aporte del equipo</h2>
+        <h2 className="n-bd-tit">Quién aporta cuánto</h2>
+        <p className="n-bd-sub">% de las horas del equipo</p>
         <GraficaAporte datos={aporte(members, tasks, files)} />
       </section>
 

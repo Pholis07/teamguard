@@ -2,7 +2,7 @@ import type { Aporte } from './aporte'
 import { horas, plural } from './formato'
 import './grafica.css'
 
-/** Barras apiladas por persona (hecho · en progreso · pendiente) y una barra de reparto del 100 %. */
+/** Barras apiladas por persona (hecho · en progreso · pendiente); el % es de las horas del equipo. */
 export function GraficaAporte({ datos, compacta }: { datos: Aporte; compacta?: boolean }) {
   if (datos.total <= 0) return null
   const max = Math.max(...datos.miembros.map((m) => m.horas))
@@ -29,16 +29,6 @@ export function GraficaAporte({ datos, compacta }: { datos: Aporte; compacta?: b
           </li>
         ))}
       </ul>
-      <div className="g-ap-reparto" aria-hidden="true">
-        <span className="g-ap-tit">Reparto</span>
-        <div className="g-ap-rbarra">
-          {datos.miembros.filter((m) => m.horas > 0).map((m, i) => (
-            <span key={m.memberId} className={`g-ap-seg g-ap-s${i % 3}`} style={{ flexGrow: m.horas }} title={`${m.name} ${m.pct} %`}>
-              <span className="g-ap-seg-t">{m.name} {m.pct} %</span>
-            </span>
-          ))}
-        </div>
-      </div>
       <p className="g-ap-leyenda" aria-hidden="true">
         <span><i className="g-ap-sw g-ap-hecho" />Hecho</span>
         <span><i className="g-ap-sw g-ap-prog" />En progreso</span>

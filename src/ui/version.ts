@@ -30,6 +30,8 @@ export type Textos = {
   cargaEquipo: string
   /** Landing. */
   eyebrow: string
+  /** Variante corta del eyebrow para pantallas angostas. */
+  eyebrowCorto: string
   titulo: { antes: string; capsula: string; despues: string; gris: string }
   /** Qué muestra la vista previa del héroe como protagonista. */
   foco: 'aporte' | 'equilibrio'
@@ -63,9 +65,10 @@ const ESTUDIANTES: Textos = {
   primeroIntegrantes: 'Para crear tareas primero agrega a quienes las harán.',
   cargaEquipo: 'Carga del equipo',
   eyebrow: 'Hecho para equipos de proyecto escolar',
+  eyebrowCorto: 'Para proyectos escolares',
   titulo: { antes: 'Que', capsula: 'nadie', despues: 'cargue', gris: 'con todo el proyecto.' },
   foco: 'aporte',
-  sub: 'TeamGuard muestra cuánto aporta cada integrante, avisa cuando alguien se pasa de su tiempo, propone quién cubre si alguien se enferma y reúne el ZIP final para entregar al profesor. Siempre decide una persona.',
+  sub: 'Ve cuánto aporta cada integrante, recibe avisos de sobrecarga, cubre ausencias con una propuesta y entrega un ZIP. Siempre decide una persona.',
   aporte: { t: 'Ve quién hace cuánto', p: 'La parte de cada integrante, a la vista. Si alguien se ausenta, el reparto cambia y el equilibrio te lo dice.' },
   cobertura: { t: 'Si alguien se enferma', p: 'Si un compañero falta, ves una propuesta de reparto, antes y después, para aprobarla o cambiarla.' },
   entrega: { t: 'Fechas y ZIP para el profesor', p: 'Cada tarea tiene su fecha de entrega y los archivos de cada integrante se reúnen en un solo ZIP, tal como se subieron.' },
@@ -113,9 +116,10 @@ const EMPRESAS: Textos = {
   primeroIntegrantes: 'Para crear tareas primero agrega a los colaboradores que las harán.',
   cargaEquipo: 'Carga del equipo',
   eyebrow: 'Hecho para equipos de trabajo',
+  eyebrowCorto: 'Para equipos de trabajo',
   titulo: { antes: 'Reparte según la', capsula: 'capacidad', despues: 'real', gris: 'de cada colaborador.' },
   foco: 'equilibrio',
-  sub: 'TeamGuard compara las horas asignadas con el tiempo real de cada colaborador, avisa antes de una sobrecarga y propone quién cubre una ausencia sin descuidar los entregables. Aprueba el responsable del área y queda registrado.',
+  sub: 'Compara las horas asignadas con el tiempo real de cada colaborador, avisa antes de una sobrecarga y propone quién cubre. Aprueba el responsable.',
   aporte: { t: '', p: '' },
   cobertura: { t: 'Cobertura con aprobación', p: 'Si un colaborador falta, el responsable del área ve una propuesta de reparto, antes y después, para aprobarla o cambiarla.' },
   entrega: { t: 'Entregable en un ZIP', p: 'Los archivos de cada colaborador se reúnen en un solo paquete, tal como se subieron.' },

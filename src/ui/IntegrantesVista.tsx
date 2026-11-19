@@ -112,8 +112,15 @@ export function IntegrantesVista({ members, tasks, files, dispatch }: Props) {
       {members.length === 0 && !borrador && (
         <Callout icono="info">{t.vacioIntegrantes}</Callout>
       )}
-      {members.length > 0 && tasks.length > 0 && <GraficaAporte compacta datos={aporte(members, tasks, files)} />}
+      {members.length > 0 && tasks.length > 0 && (
+        <section className="n-bd">
+          <h2 className="n-bd-tit">Quién aporta cuánto</h2>
+          <p className="n-bd-sub">% de las horas del equipo</p>
+          <GraficaAporte compacta datos={aporte(members, tasks, files)} />
+        </section>
+      )}
       <BaseDeDatos
+        subtitulo="Carga: % de su tiempo disponible"
         columnas={[
           { icono: 'texto', nombre: 'Nombre' },
           { icono: 'numero', nombre: 'Horas disponibles', ancho: '172px' },

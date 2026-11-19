@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react'
 import type { Acento, Tema } from './formato'
 import { Icono, SelectorAcento, SelectorVersion } from './bloques'
 import { irAVersion, useTextos, type Version } from './version'
@@ -183,7 +183,7 @@ function Cinta() {
 }
 
 /* ---------- Bento ---------- */
-function CardAporte({ onEjemplo }: { onEjemplo: () => void }) {
+function CardAporte() {
   const { aporte } = useTextos()
   const activo = useActivo()
   const quieto = useQuieto()
@@ -198,18 +198,17 @@ function CardAporte({ onEjemplo }: { onEjemplo: () => void }) {
       <div className="in-card-t">
         <h3>{aporte.t}</h3>
         <p>{aporte.p}</p>
-        <button type="button" className="in-pildora" onClick={onEjemplo}>Ver cómo <Icono nombre="flecha" tam={14} /></button>
       </div>
       <div className="in-card-v" aria-hidden="true">
         <div className="in-apo-cab"><small>Aporte por persona · % de las horas</small><small className="in-apo-cap">{alt ? 'Ana ausente · Luis cubre' : 'Reparto normal'}</small></div>
         <Aporte valores={alt ? APORTE[3] : APORTE[0]} />
-        <div className="in-apo-eq"><span>Equilibrio</span><b className={`num ${alt ? '' : ''}`}><Cuenta a={100} /></b><span className="in-eq-t">Riesgo Bajo</span></div>
+        <div className="in-apo-eq"><span>Equilibrio</span><b className="num"><Cuenta a={100} /></b><span className="in-eq-t">Riesgo Bajo</span></div>
       </div>
     </article>
   )
 }
 
-function CardEquilibrio({ onEjemplo }: { onEjemplo: () => void }) {
+function CardEquilibrio() {
   const { equilibrio } = useTextos()
   const activo = useActivo()
   const quieto = useQuieto()
@@ -226,7 +225,6 @@ function CardEquilibrio({ onEjemplo }: { onEjemplo: () => void }) {
       <div className="in-card-t">
         <h3>{equilibrio.t}</h3>
         <p>{equilibrio.p}</p>
-        <button type="button" className="in-pildora" onClick={onEjemplo}>Ver cómo <Icono nombre="flecha" tam={14} /></button>
       </div>
       <div className="in-card-v" aria-hidden="true">
         <div className={`in-eq-gr in-eq ${alto ? 'alto' : ''}`}>
@@ -240,7 +238,7 @@ function CardEquilibrio({ onEjemplo }: { onEjemplo: () => void }) {
   )
 }
 
-function CardActa({ onEjemplo }: { onEjemplo: () => void }) {
+function CardActa() {
   const { acta } = useTextos()
   return (
     <article className="in-card" id="entrega" style={{ ['--k' as string]: 2 }}>
@@ -252,12 +250,11 @@ function CardActa({ onEjemplo }: { onEjemplo: () => void }) {
       </div>
       <h3>{acta.t}</h3>
       <p>{acta.p}</p>
-      <button type="button" className="in-pildora" onClick={onEjemplo}>Ver cómo <Icono nombre="flecha" tam={14} /></button>
     </article>
   )
 }
 
-function CardCobertura({ onEjemplo }: { onEjemplo: () => void }) {
+function CardCobertura() {
   const { cobertura } = useTextos()
   return (
     <article className="in-card" id="contingencia" style={{ ['--k' as string]: 1 }}>
@@ -268,12 +265,11 @@ function CardCobertura({ onEjemplo }: { onEjemplo: () => void }) {
       </div>
       <h3>{cobertura.t}</h3>
       <p>{cobertura.p}</p>
-      <button type="button" className="in-pildora" onClick={onEjemplo}>Ver cómo <Icono nombre="flecha" tam={14} /></button>
     </article>
   )
 }
 
-function CardEntrega({ onEjemplo }: { onEjemplo: () => void }) {
+function CardEntrega() {
   const { entrega } = useTextos()
   return (
     <article className="in-card" id="entrega" style={{ ['--k' as string]: 2 }}>
@@ -285,7 +281,6 @@ function CardEntrega({ onEjemplo }: { onEjemplo: () => void }) {
       </div>
       <h3>{entrega.t}</h3>
       <p>{entrega.p}</p>
-      <button type="button" className="in-pildora" onClick={onEjemplo}>Ver cómo <Icono nombre="flecha" tam={14} /></button>
     </article>
   )
 }
@@ -323,6 +318,15 @@ function Barra({ version, tema, acento, onAcento, onTema, onEmpezar, onEjemplo, 
   }, [producto, menu, colores])
 
   const cerrar = () => { setProducto(false); setMenu(false); setColores(false) }
+  // Las anclas desplazan sin tocar el hash: la ruta #/estudiantes o #/empresas se conserva.
+  const ir = (e: MouseEvent<HTMLAnchorElement>) => {
+    const id = e.currentTarget.getAttribute('href')?.slice(1)
+    const el = id ? document.getElementById(id) : null
+    if (!el) return
+    e.preventDefault()
+    cerrar()
+    el.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' })
+  }
   const claro = tema === 'oscuro'
   return (
     <header className="in-nav" ref={caja}>
@@ -335,14 +339,14 @@ function Barra({ version, tema, acento, onAcento, onTema, onEmpezar, onEjemplo, 
           {producto && (
             <ul id="in-producto" className="in-pop">
               {PRODUCTO.map((x) => (
-                <li key={x.href}><a href={x.href} onClick={cerrar}><b>{x.t}</b><span>{x.d}</span></a></li>
+                <li key={x.href}><a href={x.href} onClick={ir}><b>{x.t}</b><span>{x.d}</span></a></li>
               ))}
             </ul>
           )}
         </div>
-        <a className="in-link" href="#como">Cómo funciona</a>
-        <a className="in-link" href="#privacidad">Privacidad</a>
-        <a className="in-link" href="#equipo">Equipo</a>
+        <a className="in-link" href="#como" onClick={ir}>Cómo funciona</a>
+        <a className="in-link" href="#privacidad" onClick={ir}>Privacidad</a>
+        <a className="in-link" href="#creditos" onClick={ir}>Créditos</a>
       </nav>
       <div className="in-nav-d">
         <SelectorVersion className="sv-nav" version={version} onVersion={irAVersion} />
@@ -357,10 +361,10 @@ function Barra({ version, tema, acento, onAcento, onTema, onEmpezar, onEjemplo, 
       </div>
       {menu && (
         <div id="in-menu" className="in-panel">
-          {PRODUCTO.map((x) => <a key={x.href} href={x.href} onClick={cerrar}>{x.t}</a>)}
-          <a href="#como" onClick={cerrar}>Cómo funciona</a>
-          <a href="#privacidad" onClick={cerrar}>Privacidad</a>
-          <a href="#equipo" onClick={cerrar}>Equipo</a>
+          {PRODUCTO.map((x) => <a key={x.href} href={x.href} onClick={ir}>{x.t}</a>)}
+          <a href="#como" onClick={ir}>Cómo funciona</a>
+          <a href="#privacidad" onClick={ir}>Privacidad</a>
+          <a href="#creditos" onClick={ir}>Créditos</a>
           <button type="button" onClick={() => { cerrar(); onEjemplo() }}>Ver ejemplo</button>
           <div className="in-panel-ac"><span>Color de acento</span><SelectorAcento acento={acento} onAcento={onAcento} /></div>
         </div>
@@ -395,7 +399,7 @@ export function Inicio({ tema, acento, onAcento, version, onTema, onEmpezar, onE
           <div className="in-velo" aria-hidden="true" />
           <SelectorVersion className="sv-in in-e" version={version} onVersion={irAVersion} />
           <img className="in-tigre in-e" style={{ ['--i' as string]: 0 }} src={logo} alt="" width="56" height="56" />
-          <p className="in-estado in-e" style={{ ['--i' as string]: 1 }}><span className="in-pt" />{t.eyebrow}</p>
+          <p className="in-estado in-e" style={{ ['--i' as string]: 1 }}><span className="in-pt" /><span className="in-largo">{t.eyebrow}</span><span className="in-corto">{t.eyebrowCorto}</span></p>
           <h1 className="in-titulo">
             <span className="in-e" style={{ ['--i' as string]: 2 }}>{t.titulo.antes} <span className="in-capsula"><span className="in-punto" />{t.titulo.capsula}</span> {t.titulo.despues}</span>
             <span className="in-gris in-e" style={{ ['--i' as string]: 3 }}>{t.titulo.gris}</span>
@@ -415,18 +419,19 @@ export function Inicio({ tema, acento, onAcento, version, onTema, onEmpezar, onE
           <div className="in-bento">
             {t.foco === 'aporte' ? (
               <>
-                <CardAporte onEjemplo={ejemplo} />
-                <CardCobertura onEjemplo={ejemplo} />
-                <CardEntrega onEjemplo={ejemplo} />
+                <CardAporte />
+                <CardCobertura />
+                <CardEntrega />
               </>
             ) : (
               <>
-                <CardEquilibrio onEjemplo={ejemplo} />
-                <CardCobertura onEjemplo={ejemplo} />
-                <CardActa onEjemplo={ejemplo} />
+                <CardEquilibrio />
+                <CardCobertura />
+                <CardActa />
               </>
             )}
           </div>
+          <div className="in-bento-cta"><button type="button" className="btn in-grande in-suave" onClick={ejemplo}>Ver el ejemplo <Icono nombre="flecha" tam={16} /></button></div>
         </Revela>
 
         <Revela className="in-seccion">
@@ -449,10 +454,10 @@ export function Inicio({ tema, acento, onAcento, version, onTema, onEmpezar, onE
         </Revela>
       </main>
 
-      <footer className="in-pie" id="equipo">
+      <footer className="in-pie" id="creditos">
         <div className="in-marca"><img src={logo} alt="" width="24" height="24" />TeamGuard</div>
         <p>{t.lema}</p>
-        <p className="in-chica">Datos de ejemplo · Hackatón UTCH 2026</p>
+        <p className="in-chica">Hackatón UTCH 2026 · Datos de ejemplo</p>
       </footer>
     </div>
   )

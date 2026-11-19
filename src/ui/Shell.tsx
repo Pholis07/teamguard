@@ -22,6 +22,7 @@ type Props = {
 /** Marco de la app: barra lateral de 240px, barra superior con migas y columna de página. En ≤760px la barra es un cajón. */
 export function Shell({ pagina, proyecto, contadores, tema, acento, onAcento, onNavegar, onTema, onInicio, onReiniciar, acciones, children }: Props) {
   const [abierto, setAbierto] = useState(false)
+  const [confirmando, setConfirmando] = useState(false)
   const t = useTextos()
   const etiqueta = (p: (typeof PAGINAS)[number]) => (p.id === 'integrantes' ? t.pagina.integrantes : p.label)
   const actual = PAGINAS.find((p) => p.id === pagina)
@@ -67,7 +68,15 @@ export function Shell({ pagina, proyecto, contadores, tema, acento, onAcento, on
         </button>
         <div className="n-acento"><span>Acento</span><SelectorAcento acento={acento} onAcento={onAcento} /></div>
         <p className="n-lema">{t.lema}</p>
-        <button type="button" className="btn btn-g n-llat" onClick={cerrandoAntes(onReiniciar)}>Reiniciar demo</button>
+        {confirmando ? (
+          <div className="n-confirma n-llat" role="group" aria-label="Confirmar reinicio">
+            <span>¿Borrar tus cambios y volver a los datos de ejemplo?</span>
+            <button type="button" className="btn btn-s" onClick={() => { setConfirmando(false); cerrandoAntes(onReiniciar)() }}>Sí, reiniciar</button>
+            <button type="button" className="btn btn-t" onClick={() => setConfirmando(false)}>No</button>
+          </div>
+        ) : (
+          <button type="button" className="btn btn-t n-reiniciar n-llat" onClick={() => setConfirmando(true)}>Reiniciar demo</button>
+        )}
       </aside>
       {abierto && <button type="button" className="n-velo" aria-label="Cerrar menú" onClick={() => setAbierto(false)} />}
       <div className="n-main">

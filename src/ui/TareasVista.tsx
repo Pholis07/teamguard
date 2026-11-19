@@ -65,7 +65,7 @@ export function TareasVista({ members, tasks, files, dispatch, onIr }: Props) {
           { icono: 'numero', nombre: 'Horas', ancho: '84px' },
           { icono: 'calendario', nombre: 'Fecha límite', ancho: '136px' },
           { icono: 'estado', nombre: 'Estado', ancho: '118px' },
-          { icono: 'check', nombre: 'Archivo', ancho: '92px' },
+          { icono: 'check', nombre: 'Requiere archivo', ancho: '112px' },
         ]}
         textoNueva="Nueva tarea"
         onNueva={members.length > 0 ? nueva : undefined}
@@ -131,7 +131,7 @@ export function TareasVista({ members, tasks, files, dispatch, onIr }: Props) {
                     <input
                       type="checkbox"
                       checked={t.requiresFile}
-                      aria-label={`Archivo de ${t.title}`}
+                      aria-label={`Requiere archivo: ${t.title}`}
                       onChange={(e) => dispatch({ type: 'updateTask', id: t.id, cambios: { requiresFile: e.target.checked } })}
                     />
                   </label>

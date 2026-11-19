@@ -26,6 +26,8 @@
 .dt-check input:focus-visible { outline: 2px solid var(--ac); outline-offset: 2px; }
 .dt-callout-p { margin: 0 0 8px; }
 .dt-nota { margin: 0; color: var(--tx3); font-size: 13px; }
+/* Cabeceras largas («Requiere archivo») pueden partirse en dos líneas. */
+.n-tabla:has(.dt-fila) th { white-space: normal; line-height: 1.2; }
 /* Escritorio: las tablas editables caben en su columna (columnas fijas, texto con elipsis). */
 .n-tabla:has(.dt-fila) { table-layout: fixed; }
 .n-tabla:has(.dt-fila) td, .n-tabla:has(.dt-fila) th { padding-left: 6px; padding-right: 6px; }
@@ -35,6 +37,3 @@
 .dt-archivo .dt-borrar { margin-left: auto; }
 /* Solo en móvil la tabla conserva su ancho natural y se desplaza dentro de su marco. */
 @media (max-width: 760px) { .n-tabla:has(.dt-fila) { min-width: 640px; } }
-.dt-carga .n-barra { min-width: 0; gap: 8px; flex-wrap: wrap; }
-.dt-carga .n-barra-pista { min-width: 48px; }
-.dt-carga .n-barra-txt { flex-wrap: wrap; gap: 4px 8px; white-space: normal; }
