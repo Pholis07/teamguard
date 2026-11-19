@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useTextos } from './version'
 import { calculateLoads, isTaskOverdue, simulateAssignment, type Member, type RuleContext, type Task } from '../domain'
 import { serieEquilibrio, type Decision } from '../delivery/acta'
@@ -7,6 +7,8 @@ import { aporte } from './aporte'
 import { useContador } from './contador'
 import { GraficaAporte } from './GraficaAporte'
 import { GraficaEquilibrio } from './GraficaEquilibrio'
+import { Ayuda } from './ayuda'
+import { EVENTO_SIMULAR } from './atajos'
 import { BarraCarga, BaseDeDatos, Callout, Checklist, Etiqueta, Icono, Pagina, Propiedades, Toggle } from './bloques'
 import { equilibrio } from './equilibrio'
 import { COLOR_RIESGO, ESTADO_TAREA, fecha, horas, miembroPorId, pct, plural, type PaginaId } from './formato'
@@ -14,6 +16,8 @@ import './paginas.css'
 
 type Props = {
   proyecto: string
+  /** El proyecto es el de ejemplo: muestra la guía «Empieza aquí». */
+  ejemplo?: boolean
   members: readonly Member[]
   tasks: readonly Task[]
   files: readonly Entrega[]
@@ -28,6 +32,17 @@ type Props = {
 const CLAVE_SIM = 'tg-simulo'
 const leerSimulo = () => { try { return sessionStorage.getItem(CLAVE_SIM) === '1' } catch { return false } }
 const guardarSimulo = () => { try { sessionStorage.setItem(CLAVE_SIM, '1') } catch { /* sin almacenamiento */ } }
+
+const CLAVE_EMPIEZA = 'tg-empieza-cerrada'
+const leerEmpieza = () => { try { return sessionStorage.getItem(CLAVE_EMPIEZA) === '1' } catch { return false } }
+const guardarEmpieza = () => { try { sessionStorage.setItem(CLAVE_EMPIEZA, '1') } catch { /* sin almacenamiento */ } }
+
+/** Primera tarea abierta y alguien más que podría tomarla: punto de partida de la simulación. */
+function simulacionInicial(members: readonly Member[], tasks: readonly Task[]) {
+  const tarea = tasks.find((t) => t.status !== 'done')
+  const otro = tarea && members.find((m) => m.id !== tarea.ownerId)
+  return tarea && otro ? { taskId: tarea.id, candidateId: otro.id } : null
+}
 
 function Avatar({ member, members, chico }: { member: Member; members: readonly Member[]; chico?: boolean }) {
   const i = (members.findIndex((m) => m.id === member.id) % 3) + 1
@@ -44,6 +59,12 @@ function FranjaEquilibrio({ eq, eqSim, veredicto, alerta, accion }: { eq: Eq; eq
   return (
     <section className="tb-hero" aria-label="Equilibrio del equipo">
       <div className="tb-hero-num">
+        <p className="tb-hero-et n-ayuda-cab">
+          <span>Equilibrio</span>
+          <Ayuda tema="el equilibrio">
+            Es el porcentaje de las horas abiertas que caben en el tiempo real de quien las tiene. 100 es que todo cabe (riesgo Bajo), de 80 a 99 es Medio y menos de 80 es Alto. Las horas de alguien ausente que nadie cubre cuentan como que no caben.
+          </Ayuda>
+        </p>
         <p className="tb-eq" aria-label={`Equilibrio ${v.indice} de 100`}>
           <span className="tb-eq-n num" aria-hidden="true">{n}</span><span className="tb-eq-de" aria-hidden="true">/100</span>
         </p>
@@ -67,11 +88,24 @@ function FranjaEquilibrio({ eq, eqSim, veredicto, alerta, accion }: { eq: Eq; eq
   )
 }
 
-export function TableroVista({ proyecto, members, tasks, files, contexto, decisiones, onIr }: Props) {
+export function TableroVista({ proyecto, ejemplo, members, tasks, files, contexto, decisiones, onIr }: Props) {
   const t = useTextos()
   const abiertas = tasks.filter((t) => t.status !== 'done')
   const [sim, setSim] = useState<{ taskId: string; candidateId: string } | null>(null)
   const [simulado, setSimulado] = useState(leerSimulo)
+  const [empiezaCerrada, setEmpiezaCerrada] = useState(leerEmpieza)
+
+  // El atajo «s» (Shell) abre o cierra la simulación.
+  useEffect(() => {
+    const alternar = () => {
+      if (members.length === 0 || tasks.length === 0) return
+      setSim((actual) => (actual ? null : simulacionInicial(members, tasks)))
+      guardarSimulo()
+      setSimulado(true)
+    }
+    window.addEventListener(EVENTO_SIMULAR, alternar)
+    return () => window.removeEventListener(EVENTO_SIMULAR, alternar)
+  }, [members, tasks])
 
   const cargas = useMemo(() => calculateLoads(members, tasks), [members, tasks])
   const simulacion = useMemo(() => {
@@ -112,12 +146,11 @@ export function TableroVista({ proyecto, members, tasks, files, contexto, decisi
   const alternativa = libre ? `${miembroPorId(members, libre.memberId)?.name} tiene ${horas(libre.remainingHours)} h libres. ` : ''
 
   function abrirSimulacion() {
-    const tarea = abiertas[0]
-    const otro = tarea && members.find((m) => m.id !== tarea.ownerId)
-    if (!tarea || !otro) return
+    const inicial = simulacionInicial(members, tasks)
+    if (!inicial) return
     guardarSimulo()
     setSimulado(true)
-    setSim({ taskId: tarea.id, candidateId: otro.id })
+    setSim(inicial)
   }
 
   function cambiarTarea(taskId: string) {
@@ -136,6 +169,7 @@ export function TableroVista({ proyecto, members, tasks, files, contexto, decisi
     eq.sinCubrir.length > 0 && `${eq.sinCubrir.map((t) => `${t.title} (${horas(t.estimatedHours)} h)`).join(', ')} no ${plural(eq.sinCubrir.length, 'tiene', 'tienen')} quién la cubra durante la ausencia`,
     eq.sobrecargados.length > 0 && `${nombres(eq.sobrecargados)} ${plural(eq.sobrecargados.length, 'pasa', 'pasan')} de su disponibilidad`,
   ].filter(Boolean)
+  const proximas = [...abiertas].sort((a, b) => a.dueDate.localeCompare(b.dueDate)).slice(0, 3)
   const vencidas = abiertas.filter((t) => isTaskOverdue(t, contexto.asOf))
   const eqSim = simulacion ? equilibrio({ ...contexto, tasks: tareasSim }) : null
   // Mientras se simula, el veredicto sale del equilibrio proyectado (misma fuente que el índice y el riesgo).
@@ -178,14 +212,19 @@ export function TableroVista({ proyecto, members, tasks, files, contexto, decisi
         </>
       }
     >
-      <div className="tb-ayudas">
-        <Toggle titulo="¿Qué es el equilibrio?">
-          <p className="p-parr">Es el porcentaje de las horas abiertas que caben en el tiempo real de quien las tiene. 100 significa que todo cabe (riesgo Bajo); de 80 a 99 hay trabajo que no cabe (Medio); menos de 80 es Alto. Las horas de alguien ausente que nadie cubre también cuentan como que no caben.</p>
-        </Toggle>
-        <Toggle titulo="¿Qué es la carga?">
-          <p className="p-parr">{t.ayudaCarga}</p>
-        </Toggle>
-      </div>
+      {ejemplo && !empiezaCerrada && (
+        <Callout icono="info">
+          <div className="tb-empieza-cab">
+            <h2 className="n-bd-tit">Empieza aquí</h2>
+            <button type="button" className="btn btn-g" onClick={() => { guardarEmpieza(); setEmpiezaCerrada(true) }} aria-label="Cerrar la guía Empieza aquí"><Icono nombre="x" tam={14} />Cerrar</button>
+          </div>
+          <ol className="tb-empieza">
+            <li><span>Simula una asignación y mira cómo cambia el equilibrio.</span><button type="button" className="btn btn-s" onClick={abrirSimulacion} disabled={abiertas.length === 0 || members.length < 2}>Simular</button></li>
+            <li><span>Registra una ausencia y acepta quién la cubre.</span><button type="button" className="btn btn-s" onClick={() => onIr('contingencia')}>Ir a Contingencia</button></li>
+            <li><span>Revisa la entrega y la bitácora de decisiones.</span><button type="button" className="btn btn-s" onClick={() => onIr('entrega')}>Ir a Entrega</button></li>
+          </ol>
+        </Callout>
+      )}
       {vencidas.length > 0 && (
         <p className="p-nota" role="status">
           <Icono nombre="alerta" tam={14} /> {vencidas.length} {plural(vencidas.length, 'tarea vencida', 'tareas vencidas')} sin terminar: {vencidas.map((t) => `${t.title} (venció el ${fecha(t.dueDate)})`).join(', ')}.
@@ -225,13 +264,13 @@ export function TableroVista({ proyecto, members, tasks, files, contexto, decisi
       )}
 
       <BaseDeDatos
-        titulo={t.cargaEquipo}
+        titulo={<>{t.cargaEquipo}<Ayuda tema="la carga del equipo">{t.ayudaCarga}</Ayuda></>}
         subtitulo="% de su tiempo disponible"
         apilada
         columnas={[
           { icono: 'persona', nombre: t.integrante },
           { icono: 'texto', nombre: 'Tareas abiertas' },
-          { icono: 'numero', nombre: 'Horas' },
+          { icono: 'numero', nombre: 'Horas asignadas' },
           { icono: 'estado', nombre: 'Carga' },
         ]}
       >
@@ -261,43 +300,31 @@ export function TableroVista({ proyecto, members, tasks, files, contexto, decisi
       </BaseDeDatos>
 
       <section className="n-bd">
-        <h2 className="n-bd-tit">Quién aporta cuánto</h2>
+        <h2 className="n-bd-tit">Quién aporta cuánto<Ayuda tema="quién aporta cuánto">Muestra qué parte de las horas del equipo lleva cada persona y cuántas de esas horas están hechas, en progreso o pendientes.</Ayuda></h2>
         <p className="n-bd-sub">% de las horas del equipo</p>
         <GraficaAporte datos={aporte(members, tasks, files)} />
       </section>
 
-      <BaseDeDatos
-        titulo="Tareas"
-        columnas={[
-          { icono: 'texto', nombre: 'Tarea' },
-          { icono: 'persona', nombre: 'Responsable' },
-          { icono: 'numero', nombre: 'Horas' },
-          { icono: 'calendario', nombre: 'Fecha límite' },
-          { icono: 'estado', nombre: 'Estado' },
-        ]}
-      >
-        {tasks.map((t) => {
-          const dueno = miembroPorId(members, t.ownerId)
-          const simulada = simulacion?.taskId === t.id
-          const nuevo = simulada ? miembroPorId(members, simulacion.candidateId) : undefined
-          const est = ESTADO_TAREA[t.status]
-          return (
-            <tr key={t.id} className={simulada ? 'p-sim' : undefined}>
-              <td>{t.title}</td>
-              <td>
-                <span className="p-persona">
-                  {dueno && <Avatar member={dueno} members={members} chico />}{dueno?.name ?? t.ownerId}
-                  {nuevo && <><span className="p-flecha"><Icono nombre="flecha" tam={12} /></span><Avatar member={nuevo} members={members} chico />{nuevo.name}<Etiqueta color="morado">Simulado</Etiqueta></>}
-                </span>
-              </td>
-              <td className="num">{horas(t.estimatedHours)} h</td>
-              <td className="num">{fecha(t.dueDate)}</td>
-              <td><Etiqueta color={est.color}>{est.texto}</Etiqueta>{isTaskOverdue(t, contexto.asOf) && <> <Etiqueta color="rojo">Vencida</Etiqueta></>}</td>
-            </tr>
-          )
-        })}
-      </BaseDeDatos>
-      <button type="button" className="btn btn-g p-enlace p-suelto" onClick={() => onIr('tareas')}>Editar en Tareas</button>
+      <section className="n-bd">
+        <h2 className="n-bd-tit">Próximas entregas</h2>
+        {proximas.length === 0 ? <p className="p-nota">No quedan tareas abiertas.</p> : (
+          <ul className="tb-prox">
+            {proximas.map((t) => {
+              const dueno = miembroPorId(members, t.ownerId)
+              const est = ESTADO_TAREA[t.status]
+              return (
+                <li key={t.id}>
+                  <span className="tb-prox-t">{t.title}</span>
+                  <span className="p-persona">{dueno && <Avatar member={dueno} members={members} chico />}{dueno?.name ?? t.ownerId}</span>
+                  <span className="num fa">{fecha(t.dueDate)}</span>
+                  <span><Etiqueta color={est.color}>{est.texto}</Etiqueta>{isTaskOverdue(t, contexto.asOf) && <> <Etiqueta color="rojo">Vencida</Etiqueta></>}</span>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+        <button type="button" className="btn btn-g p-enlace p-suelto" onClick={() => onIr('tareas')}>Ver todas en Tareas</button>
+      </section>
     </Pagina>
   )
 }

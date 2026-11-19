@@ -37,3 +37,26 @@
 .dt-archivo .dt-borrar { margin-left: auto; }
 /* Solo en móvil la tabla conserva su ancho natural y se desplaza dentro de su marco. */
 @media (max-width: 760px) { .n-tabla:has(.dt-fila) { min-width: 640px; } }
+/* Marca de guardado, errores y controles nativos con el tema */
+.dt-ok { position: absolute; right: 5px; top: 8px; display: inline-flex; color: var(--tx2); pointer-events: none; }
+@media (prefers-reduced-motion: no-preference) { .dt-ok { animation: dt-ok .9s ease-out both; } @keyframes dt-ok { 0% { opacity: 0; transform: scale(.7); } 15% { opacity: 1; transform: scale(1); } 75% { opacity: 1; } 100% { opacity: 0; } } }
+.dt-celda > .dt-estado + .dt-ok { right: 2px; }
+.dt-vencida { display: block; padding: 0 6px; font-size: 12px; line-height: 1.2; color: var(--alerta); }
+.cel[aria-invalid="true"], .p-campo input[aria-invalid="true"] { border-color: var(--alerta); }
+.dt-error-fila { margin-top: 4px; }
+.dt-acciones { display: flex; flex-wrap: wrap; gap: 8px; }
+.dt-borrador .btn { height: 28px; padding: 0 10px; }
+@media (hover: none) { .dt-borrador .btn { min-height: 44px; } }
+.p-select, .p-campo input[type="date"] { color-scheme: dark; border-width: 2px; font-family: inherit; }
+:root[data-tema="claro"] .p-select { color-scheme: light; }
+.p-select:focus-visible, .p-campo input:focus-visible { outline: 0; border-color: var(--ac); box-shadow: 0 0 0 1px var(--ac); }
+select.cel { color-scheme: dark; }
+:root[data-tema="claro"] select.cel { color-scheme: light; }
+.n-tabla th.n-ayuda-cab .n-ayuda-pop { left: auto; right: 0; text-align: left; }
+.n-tabla th.n-ayuda-cab:first-child .n-ayuda-pop { left: 0; right: auto; }
+.n-tabla:has(.dt-fila) th.n-ayuda-cab:nth-child(-n+2) .n-ayuda-pop { left: 0; right: auto; }
+/* Los avisos bajo una celda y la ayuda del encabezado no se recortan; la tabla deja sitio mientras están a la vista. */
+.n-tabla:has(.dt-fila) td:has(.dt-error), .n-tabla:has(.dt-fila) th.n-ayuda-cab { overflow: visible; }
+.n-bd-marco:has(.dt-celda .dt-error) { padding-bottom: 72px; }
+.n-bd-marco:has(.n-ayuda) { min-height: 230px; }
+.dt-celda .dt-error { background: linear-gradient(var(--tag-rojo-bg), var(--tag-rojo-bg)), var(--card, var(--bg)); border: 1px solid var(--tag-rojo-tx); }

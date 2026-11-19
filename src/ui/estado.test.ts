@@ -44,3 +44,33 @@ test('la versión nombra el ejemplo, se conserva al reiniciar y no toca los dato
   expect(ejemplo().proyecto!.nombre).toBe('Proyecto final (ejemplo)')
   expect(reducer(emp, { type: 'setVersion', version: 'empresas' })).toBe(emp)
 })
+
+test('restoreTask reinserta la misma tarea en su posición original, con su responsable', () => {
+  const base = ejemplo()
+  const original = base.tasks[1]
+  const sin = reducer(base, { type: 'removeTask', id: original.id })
+  expect(sin.tasks).toHaveLength(base.tasks.length - 1)
+  const de_vuelta = reducer(sin, { type: 'restoreTask', task: original, index: 1 })
+  expect(de_vuelta.tasks).toEqual(base.tasks)
+  expect(de_vuelta.tasks[1]).toBe(original)
+  expect(de_vuelta.decisiones).toEqual([])
+})
+
+test('restoreTask no duplica una tarea que ya existe', () => {
+  const base = ejemplo()
+  expect(reducer(base, { type: 'restoreTask', task: base.tasks[0], index: 0 })).toBe(base)
+})
+
+test('restoreMember reinserta al integrante en su posición y recupera su ausencia', () => {
+  const base = reducer(ejemplo(), { type: 'setAbsence', absence: { ...DEMO_ABSENCE, memberId: 'm2' }, hora: '10:00' })
+  // m2 sin tareas para poder borrarlo
+  const libre = { ...base, tasks: base.tasks.filter((t) => t.ownerId !== 'm2') }
+  const miembro = libre.members[1]
+  const sin = reducer(libre, { type: 'removeMember', id: miembro.id })
+  expect(sin.members.map((m) => m.id)).not.toContain(miembro.id)
+  expect(sin.absence).toBeNull()
+  const de_vuelta = reducer(sin, { type: 'restoreMember', member: miembro, index: 1, absence: libre.absence })
+  expect(de_vuelta.members).toEqual(libre.members)
+  expect(de_vuelta.absence).toEqual(libre.absence)
+  expect(reducer(de_vuelta, { type: 'restoreMember', member: miembro, index: 0 })).toBe(de_vuelta)
+})

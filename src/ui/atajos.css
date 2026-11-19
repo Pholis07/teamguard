@@ -1,0 +1,24 @@
+.atajos { width: min(440px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; padding: 20px 24px 24px; border: 1px solid var(--bd); border-radius: 10px; background: var(--card); color: var(--tx); box-shadow: 0 16px 48px rgba(0, 0, 0, .35); }
+.atajos::backdrop { background: rgba(0, 0, 0, .5); }
+.atajos-cab { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.atajos-nota { margin: 4px 0 8px; font-size: 13px; color: var(--tx2); }
+.atajos-g { margin-top: 16px; }
+.atajos-g h3 { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--tx2); }
+.atajos-g dl { margin: 0; }
+.atajos-f { display: flex; align-items: center; gap: 16px; padding: 6px 0; font-size: 14px; border-top: 1px solid var(--bd); }
+.atajos-f:first-child { border-top: 0; }
+.atajos-f dt { display: flex; gap: 4px; flex: none; width: 72px; }
+.atajos-f dd { margin: 0; }
+kbd, .n-kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 6px; border: 1px solid var(--bd); border-bottom-width: 2px; border-radius: 5px; background: var(--bg); color: var(--tx); font: 500 12px/1 var(--fuente); }
+@media (prefers-reduced-motion: no-preference) { .atajos[open] { animation: atajos-entra .18s cubic-bezier(.16, 1, .3, 1) both; } @keyframes atajos-entra { from { opacity: 0; transform: translateY(6px); } } }
+
+/* Barra lateral: dígito del atajo al pasar el cursor (solo escritorio con puntero) y botón «Atajos ?». */
+.n-tecla { display: none; }
+.n-atajos-b { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+.n-atajos-b:hover:not(:disabled) { text-decoration: underline; text-underline-offset: 3px; }
+.n-atajos-b kbd { height: 18px; min-width: 18px; padding: 0 4px; font-size: 11px; color: var(--tx2); }
+@media (hover: hover) and (min-width: 761px) {
+  .n-tecla { display: inline-flex; position: absolute; right: 38px; top: 50%; height: 18px; min-width: 18px; padding: 0 4px; margin-top: -9px; font-size: 11px; color: var(--tx2); opacity: 0; transition: opacity .12s ease-out; }
+  .n-item:hover .n-tecla, .n-item:focus-visible .n-tecla { opacity: 1; }
+}
+@media (max-width: 760px) { .n-atajos-b { display: none; } }

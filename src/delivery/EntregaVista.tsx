@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import type { Member, Task } from '../domain'
+import { DEMO_DATE, isTaskOverdue, type Member, type Task } from '../domain'
+import { Pagina } from '../ui/bloques'
+import { plural } from '../ui/formato'
 import { actaEntrega, type Decision } from './acta'
 import { armarZip, NOMBRE_ACTA, progresoEntrega, type Entrega } from './zip'
 import './entrega.css'
@@ -18,6 +20,8 @@ export function EntregaVista({ tasks, members, files, decisiones, onAddFile }: P
   const avatar = (id: string) => `av av${(members.findIndex((m) => m.id === id) % 3) + 1}`
   const { listas, total } = progresoEntrega(tasks, files)
   const faltan = total - listas
+  const sinArchivo = tasks.filter((t) => t.requiresFile && !files.some((f) => f.taskId === t.id))
+  const motivo = sinArchivo.length > 0 ? `Falta archivo en: ${sinArchivo.map((t) => t.title).join(', ')}.` : null
 
   async function descargar() {
     setError(null)
@@ -37,27 +41,30 @@ export function EntregaVista({ tasks, members, files, decisiones, onAddFile }: P
   }
 
   return (
-    <>
-      <header className="entrega-cabecera">
-        <h1>
-          <span role="status">
-            {listas} de {total} entregas listas.{' '}
-            <span className="fa">
-              {faltan > 0 ? `Falta archivo en ${faltan} tarea(s) obligatoria(s).` : 'Ya se puede descargar el ZIP.'}
-            </span>
+    <Pagina icono="entrega" titulo="Entrega">
+      <div className="entrega-cabecera">
+        <p className="entrega-estado" role="status">
+          {listas} de {total} entregas listas.{' '}
+          <span className="fa">
+            {faltan > 0
+              ? `Aún ${plural(faltan, 'queda', 'quedan')} ${faltan} ${plural(faltan, 'entrega', 'entregas')} por adjuntar para descargar el ZIP.`
+              : 'Ya se puede descargar el ZIP.'}
           </span>
-        </h1>
-        <button className="btn btn-p" disabled={faltan > 0} onClick={descargar}>
-          Descargar ZIP
-        </button>
-      </header>
+        </p>
+        <div className="entrega-zip">
+          <button className="btn btn-p" disabled={faltan > 0} aria-describedby={motivo ? 'zip-motivo' : undefined} onClick={descargar}>
+            Descargar ZIP
+          </button>
+          {motivo && <p className="entrega-motivo fa" id="zip-motivo">{motivo}</p>}
+        </div>
+      </div>
       {error && (
         <p role="alert" className="chip c-wa">
           {error}
         </p>
       )}
       <section aria-labelledby="h-entregas" className="entrega-seccion">
-        <h2 id="h-entregas">Archivos por tarea</h2>
+        <h2 id="h-entregas" className="n-bd-tit">Archivos por tarea</h2>
         <ul className="panel entrega-lista">
           {tasks.map((t) => {
             const propios = files.filter((f) => f.taskId === t.id)
@@ -72,7 +79,7 @@ export function EntregaVista({ tasks, members, files, decisiones, onAddFile }: P
                 </span>
                 <span className="entrega-archivos">
                   {propios.length === 0 ? (
-                    <span className="fa">Sin archivo</span>
+                    <span className="fa">Nada adjuntado todavía</span>
                   ) : (
                     propios.map((f, i) => (
                       <span key={i}>
@@ -85,7 +92,9 @@ export function EntregaVista({ tasks, members, files, decisiones, onAddFile }: P
                   (propios.length > 0 ? (
                     <span className="chip c-ok">✓ Lista</span>
                   ) : (
-                    <span className="chip c-wa">Falta archivo</span>
+                    <span className={isTaskOverdue(t, DEMO_DATE) ? 'chip c-wa' : 'chip c-neutro'}>
+                      Sin archivo{isTaskOverdue(t, DEMO_DATE) && <span className="sr-only"> y la fecha límite ya pasó</span>}
+                    </span>
                   ))}
                 <label className="btn btn-s">
                   Adjuntar<span className="sr-only"> a {t.title}</span>
@@ -109,7 +118,7 @@ export function EntregaVista({ tasks, members, files, decisiones, onAddFile }: P
       </section>
       <section aria-labelledby="h-decisiones" className="entrega-seccion">
         <div className="entrega-seccion-cabeza">
-          <h2 id="h-decisiones">Decisiones del equipo</h2>
+          <h2 id="h-decisiones" className="n-bd-tit">Decisiones del equipo</h2>
           <span className="fa">El ZIP incluye {NOMBRE_ACTA} con este registro.</span>
         </div>
         <ol className="panel entrega-lista bitacora">
@@ -127,6 +136,6 @@ export function EntregaVista({ tasks, members, files, decisiones, onAddFile }: P
           )}
         </ol>
       </section>
-    </>
+    </Pagina>
   )
 }

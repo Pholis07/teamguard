@@ -1,6 +1,6 @@
 import { Children, useRef, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react'
-import { useTextos, VERSIONES, type Version } from './version'
-import { ACENTOS, PAGINAS, horas, pct, type Acento, type ColorEtiqueta } from './formato'
+import { VERSIONES, type Version } from './version'
+import { ACENTOS, horas, pct, type Acento, type ColorEtiqueta } from './formato'
 
 /* Íconos: trazos Lucide en línea, un solo grosor (1.5) en toda la interfaz. */
 const TRAZOS = {
@@ -98,16 +98,11 @@ export function SelectorVersion({ version, onVersion, className = '' }: { versio
   )
 }
 
-/** Página: etiqueta superior «PROYECTO · SECCIÓN», ícono de línea junto al título, propiedades como fichas, divisor y bloques.
- *  `icono` es un nombre de ícono; `seccion` (opcional) sale de PAGINAS cuando el ícono es el de una página. */
-export function Pagina({ icono, seccion, titulo, propiedades, children }: { icono: NombreIcono; seccion?: string; titulo: ReactNode; propiedades?: ReactNode; children?: ReactNode }) {
-  const t = useTextos()
-  const pag = PAGINAS.find((p) => p.icono === icono)
-  const etiqueta = seccion ?? (pag?.id === 'integrantes' ? t.pagina.integrantes : pag?.label)
+/** Página: ícono de línea junto al título (la ubicación la da la miga de pan), propiedades como fichas, divisor y bloques. */
+export function Pagina({ icono, titulo, propiedades, children }: { icono: NombreIcono; titulo: ReactNode; propiedades?: ReactNode; children?: ReactNode }) {
   return (
     <article className="n-doc">
       <header className="n-cab">
-        {etiqueta && <p className="n-eyebrow">Proyecto · {etiqueta}</p>}
         <h1 className="n-titulo"><span className="n-titulo-i" aria-hidden="true"><Icono nombre={icono} tam={28} /></span><span>{titulo}</span></h1>
         {propiedades}
       </header>
@@ -223,7 +218,7 @@ export function BaseDeDatos({ titulo, subtitulo, apilada, columnas, onNueva, tex
   subtitulo?: ReactNode
   /** En móvil cada fila pasa a ser una tarjeta en vez de desplazarse. */
   apilada?: boolean
-  columnas: { icono?: NombreIcono; nombre: string; ancho?: string }[]
+  columnas: { icono?: NombreIcono; nombre: string; ancho?: string; /** Botón «i» junto al encabezado. */ ayuda?: ReactNode }[]
   onNueva?: () => void
   textoNueva?: string
   /** Texto cuando no hay filas (pasa `vacio` y children vacío). */
@@ -237,7 +232,7 @@ export function BaseDeDatos({ titulo, subtitulo, apilada, columnas, onNueva, tex
       <div className={apilada ? 'n-bd-marco n-apilada' : 'n-bd-marco'}>
         <table className="n-tabla">
           <thead>
-            <tr>{columnas.map((c) => <th key={c.nombre} style={c.ancho ? { width: c.ancho } : undefined}>{c.nombre}</th>)}</tr>
+            <tr>{columnas.map((c) => <th key={c.nombre} className={c.ayuda ? 'n-ayuda-cab' : undefined} style={c.ayuda ? { width: c.ancho, position: 'relative' } : c.ancho ? { width: c.ancho } : undefined}>{c.nombre}{c.ayuda}</th>)}</tr>
           </thead>
           <tbody>
             {children}

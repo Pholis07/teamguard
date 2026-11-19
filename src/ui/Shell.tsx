@@ -1,5 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Icono, SelectorAcento } from './bloques'
+import { Atajos } from './Atajos'
+import { atajoDeTecla, esCampo, EVENTO_SIMULAR, TECLA_DE } from './atajos'
 import { useTextos } from './version'
 import { PAGINAS, type PaginaId, type Acento, type Proyecto, type Tema } from './formato'
 
@@ -23,6 +25,7 @@ type Props = {
 export function Shell({ pagina, proyecto, contadores, tema, acento, onAcento, onNavegar, onTema, onInicio, onReiniciar, acciones, children }: Props) {
   const [abierto, setAbierto] = useState(false)
   const [confirmando, setConfirmando] = useState(false)
+  const [atajos, setAtajos] = useState(false)
   const t = useTextos()
   const etiqueta = (p: (typeof PAGINAS)[number]) => (p.id === 'integrantes' ? t.pagina.integrantes : p.label)
   const actual = PAGINAS.find((p) => p.id === pagina)
@@ -34,6 +37,27 @@ export function Shell({ pagina, proyecto, contadores, tema, acento, onAcento, on
     window.addEventListener('keydown', alTeclear)
     return () => window.removeEventListener('keydown', alTeclear)
   }, [abierto])
+
+  // Atajos de teclado: 1–5 páginas, s simulación, ? ayuda. Se callan al escribir, con modificadores, al presentar o con un diálogo abierto.
+  useEffect(() => {
+    const alTeclear = (e: KeyboardEvent) => {
+      const a = atajoDeTecla(e.key, {
+        ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey,
+        escribiendo: esCampo(document.activeElement) || esCampo(e.target as Element),
+        presentando: document.querySelector('.guia') !== null,
+        dialogo: document.querySelector('dialog[open]') !== null,
+      })
+      if (!a) return
+      if (a.tipo === 'pagina') onNavegar(a.pagina)
+      else if (a.tipo === 'ayuda') setAtajos(true)
+      else if (pagina === 'tablero') window.dispatchEvent(new Event(EVENTO_SIMULAR))
+      else return
+      e.preventDefault()
+      setAbierto(false)
+    }
+    window.addEventListener('keydown', alTeclear)
+    return () => window.removeEventListener('keydown', alTeclear)
+  }, [onNavegar, pagina])
 
   const cerrandoAntes = (accion: () => void) => () => {
     setAbierto(false)
@@ -57,6 +81,7 @@ export function Shell({ pagina, proyecto, contadores, tema, acento, onAcento, on
             <button key={p.id} type="button" className="n-item" aria-current={pagina === p.id ? 'page' : undefined} onClick={cerrandoAntes(() => onNavegar(p.id))}>
               <span className="n-item-e" aria-hidden="true"><Icono nombre={p.icono} /></span>
               <span className="n-item-t">{etiqueta(p)}</span>
+              <kbd className="n-tecla" aria-hidden="true">{TECLA_DE[p.id]}</kbd>
               {cuentas[p.id] !== undefined && <span className="n-cuenta">{cuentas[p.id]}</span>}
             </button>
           ))}
@@ -68,6 +93,7 @@ export function Shell({ pagina, proyecto, contadores, tema, acento, onAcento, on
         </button>
         <div className="n-acento"><span>Acento</span><SelectorAcento acento={acento} onAcento={onAcento} /></div>
         <p className="n-lema">{t.lema}</p>
+        <button type="button" className="btn btn-t n-reiniciar n-atajos-b n-llat" onClick={() => setAtajos(true)} aria-haspopup="dialog">Atajos <kbd>?</kbd></button>
         {confirmando ? (
           <div className="n-confirma n-llat" role="group" aria-label="Confirmar reinicio">
             <span>¿Borrar tus cambios y volver a los datos de ejemplo?</span>
@@ -78,6 +104,7 @@ export function Shell({ pagina, proyecto, contadores, tema, acento, onAcento, on
           <button type="button" className="btn btn-t n-reiniciar n-llat" onClick={() => setConfirmando(true)}>Reiniciar demo</button>
         )}
       </aside>
+      {atajos && <Atajos onCerrar={() => setAtajos(false)} />}
       {abierto && <button type="button" className="n-velo" aria-label="Cerrar menú" onClick={() => setAbierto(false)} />}
       <div className="n-main">
         <header className="n-top">

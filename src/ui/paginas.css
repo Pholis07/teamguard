@@ -71,7 +71,17 @@
 .tb-veredicto { margin: 0; font-size: 14px; line-height: 1.45; color: var(--tx2); }
 .tb-veredicto-a { color: var(--alerta); }
 .tb-hero-accion { justify-self: end; }
-.tb-ayudas { display: flex; flex-direction: column; gap: 2px; margin-top: -12px; }
+.tb-hero-et { margin: 0; display: flex; align-items: center; gap: 2px; font-size: 14px; color: var(--tx2); }
+.tb-empieza-cab { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.tb-empieza { margin: 0; padding: 0; list-style: none; counter-reset: paso; display: flex; flex-direction: column; gap: 8px; }
+.tb-empieza li { counter-increment: paso; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.tb-empieza li::before { content: counter(paso); flex: none; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--bd); border-radius: 50%; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--tx2); }
+.tb-empieza li > span { flex: 1 1 240px; min-width: 0; }
+.tb-prox { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--bd); border-bottom: 1px solid var(--bd); }
+.tb-prox li { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr) 64px auto; align-items: center; gap: 4px 16px; padding: 10px 4px; font-size: 14px; }
+.tb-prox li + li { border-top: 1px solid var(--bd); }
+.tb-prox-t { font-weight: 500; overflow-wrap: anywhere; }
+@media (max-width: 760px) { .tb-prox li { grid-template-columns: 1fr auto; } .tb-prox-t { grid-column: 1 / -1; } }
 .n-bd-tit { margin: 0; }
 @media (max-width: 760px) {
   .tb-hero { grid-template-columns: 1fr; padding: 16px; }

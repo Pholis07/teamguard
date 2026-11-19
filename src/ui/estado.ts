@@ -38,11 +38,14 @@ export type Accion =
   | { type: 'addMember'; name: string; availableHours: number }
   | { type: 'updateMember'; id: string; cambios: Partial<Omit<Member, 'id'>> }
   | { type: 'removeMember'; id: string }
+  // Deshacer un borrado: reinserta el mismo objeto en su posición original (no es una reasignación).
+  | { type: 'restoreMember'; member: Member; index: number; absence?: Absence | null }
   | ({ type: 'addTask' } & NuevaTarea)
   | { type: 'updateTask'; id: string; cambios: Partial<Omit<Task, 'id' | 'ownerId'>> }
   // Cambio manual de responsable: siempre queda en la bitácora (y en el acta).
   | { type: 'reassignTask'; id: string; ownerId: string; hora: string }
   | { type: 'removeTask'; id: string }
+  | { type: 'restoreTask'; task: Task; index: number }
   | { type: 'acceptProposal'; proposal: CoverageProposal; hora: string }
   | { type: 'setAbsence'; absence: Absence | null; hora: string }
   | { type: 'addFile'; entrega: Entrega }
@@ -109,6 +112,13 @@ export function reducer(estado: Estado, accion: Accion): Estado {
         absence: estado.absence?.memberId === accion.id ? null : estado.absence,
       }
     }
+    case 'restoreMember': {
+      const { member, index, absence } = accion
+      if (estado.members.some((m) => m.id === member.id)) return estado
+      const members = [...estado.members]
+      members.splice(Math.min(Math.max(index, 0), members.length), 0, member)
+      return { ...estado, members, absence: absence && !estado.absence ? absence : estado.absence }
+    }
     case 'addTask': {
       const { type: _tipo, ...datos } = accion
       const tarea: Task = { ...datos, id: siguienteId('t', estado.tasks.map((t) => t.id)), title: datos.title.trim(), requiresFile: datos.requiresFile ?? true }
@@ -133,6 +143,13 @@ export function reducer(estado: Estado, accion: Accion): Estado {
       // Una tarea con archivos entregados no se borra: se perdería trabajo real del equipo.
       if (estado.files.some((f) => f.taskId === accion.id)) return estado
       return { ...estado, tasks: estado.tasks.filter((t) => t.id !== accion.id) }
+    case 'restoreTask': {
+      const { task, index } = accion
+      if (estado.tasks.some((t) => t.id === task.id)) return estado
+      const tasks = [...estado.tasks]
+      tasks.splice(Math.min(Math.max(index, 0), tasks.length), 0, task)
+      return { ...estado, tasks }
+    }
     case 'acceptProposal': {
       const { proposal, hora } = accion
       try {

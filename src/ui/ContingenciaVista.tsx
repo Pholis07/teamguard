@@ -6,7 +6,7 @@ import {
 } from '../domain'
 import { BarraCarga, Callout, Etiqueta, Icono, Pagina, Propiedades } from './bloques'
 import { equilibrio } from './equilibrio'
-import { COLOR_RIESGO, fecha, fechaValida, horas, miembroPorId, pct, rango } from './formato'
+import { COLOR_RIESGO, fecha, fechaValida, horas, miembroPorId, pct, plural, rango } from './formato'
 import './paginas.css'
 
 type Props = {
@@ -41,7 +41,6 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
   const [quien, setQuien] = useState('')
   const [desde, setDesde] = useState(DEMO_DATE)
   const [hasta, setHasta] = useState(sumarDias(DEMO_DATE, 2))
-  const [error, setError] = useState('')
 
   const pendientes = useMemo(() => (absence ? getTasksNeedingCoverage(contexto) : []), [absence, contexto])
   const tarea = pendientes[0]
@@ -62,13 +61,20 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
     setAviso('')
   }
 
+  // Validación en vivo: el motivo se muestra junto a los campos y el botón espera a que se corrija.
+  const problema = !fechaValida(desde)
+    ? { campo: 'desde', texto: 'Elige la fecha «Desde» completa: día, mes y año.' }
+    : !fechaValida(hasta)
+      ? { campo: 'hasta', texto: 'Elige la fecha «Hasta» completa: día, mes y año.' }
+      : hasta < desde
+        ? { campo: 'hasta', texto: `«Hasta» no puede ser antes que «Desde». Elige el ${fecha(desde)} o una fecha posterior.` }
+        : null
+  const dias = problema ? 0 : Math.round((Date.parse(`${hasta}T00:00:00Z`) - Date.parse(`${desde}T00:00:00Z`)) / 86400000) + 1
+
   function registrar(e: React.FormEvent) {
     e.preventDefault()
     const memberId = quien || members[0]?.id
-    if (!memberId) return setError(`Primero agrega ${t.integrantesMin} en ${t.integrantes}.`)
-    if (!fechaValida(desde) || !fechaValida(hasta)) return setError('Elige fechas válidas.')
-    if (hasta < desde) return setError('«Hasta» no puede ser antes que «Desde».')
-    setError('')
+    if (!memberId || problema) return
     setCubierta(null)
     reiniciar()
     onSetAbsence({ memberId, from: desde, to: hasta, status: 'active' })
@@ -134,14 +140,26 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
               </select>
             </label>
             <label className="p-campo">Desde
-              <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
+              <input
+                type="date" value={desde} max={fechaValida(hasta) ? hasta : undefined}
+                aria-invalid={problema?.campo === 'desde' ? true : undefined}
+                aria-describedby={problema ? 'ausencia-rango' : undefined}
+                onChange={(e) => setDesde(e.target.value)}
+              />
             </label>
             <label className="p-campo">Hasta
-              <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
+              <input
+                type="date" value={hasta} min={fechaValida(desde) ? desde : undefined}
+                aria-invalid={problema?.campo === 'hasta' ? true : undefined}
+                aria-describedby={problema ? 'ausencia-rango' : undefined}
+                onChange={(e) => setHasta(e.target.value)}
+              />
             </label>
-            <button type="submit" className="btn btn-p" disabled={sinGente}><Icono nombre="ausencia" />Registrar ausencia</button>
+            <button type="submit" className="btn btn-p" disabled={sinGente || !!problema}><Icono nombre="ausencia" />Registrar ausencia</button>
           </form>
-          {error && <p className="p-error" role="alert">{error}</p>}
+          {problema
+            ? <p className="p-error" id="ausencia-rango" role="alert">{problema.texto}</p>
+            : <p className="p-nota num" id="ausencia-rango" role="status">{dias} {plural(dias, 'día', 'días')} · {rango(desde, hasta)}</p>}
           <p className="p-nota">El motivo es privado; solo se guardan las fechas.</p>
         </Callout>
         <section className="n-bd">

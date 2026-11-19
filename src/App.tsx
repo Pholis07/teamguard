@@ -1,13 +1,15 @@
 import { useEffect, useReducer, useState, type ReactNode } from 'react'
+import type { Absence, CoverageProposal } from './domain'
 import { Compartir } from './Compartir'
 import { PASOS } from './guion'
 import { GuiaPresentacion } from './Presentar'
 import { EntregaVista } from './delivery/EntregaVista'
 import { progresoEntrega } from './delivery/zip'
 import { contextoDe, estadoInicial, reducer } from './ui/estado'
-import { acentoGuardado, ahora, aplicarAcento, guardarAcento, type Acento, type PaginaId, type Tema } from './ui/formato'
+import { acentoGuardado, ahora, aplicarAcento, guardarAcento, miembroPorId, rango, type Acento, type PaginaId, type Tema } from './ui/formato'
 import { ACENTO_SUGERIDO, guardarVersion, irAVersion, versionDeHash, versionGuardada, VersionContext, type Version } from './ui/version'
 import { Icono } from './ui/bloques'
+import { AvisosProvider, useAvisos } from './ui/avisos'
 import { Shell } from './ui/Shell'
 import { Inicio } from './ui/Inicio'
 import { CrearEspacio } from './ui/CrearEspacio'
@@ -27,6 +29,15 @@ function temaGuardado(): Tema {
 }
 
 export default function App() {
+  return (
+    <AvisosProvider>
+      <AppInterna />
+    </AvisosProvider>
+  )
+}
+
+function AppInterna() {
+  const { avisar } = useAvisos()
   const [pagina, setPagina] = useState<PaginaId>('tablero')
   const [tema, setTema] = useState<Tema>(temaGuardado)
   // Acento elegido de forma explícita; mientras sea null se sugiere uno según la versión.
@@ -91,6 +102,32 @@ export default function App() {
       ? { label: 'Completar el Resumen', onClick: () => muestra('t3', 'm3', 'resumen.txt', 'Resumen de Sol (ejemplo).') }
       : undefined
 
+  const nombreDe = (id: string) => miembroPorId(estado.members, id)?.name ?? id
+  function cambiarAusencia(absence: Absence | null) {
+    const antes = estado.absence
+    dispatch({ type: 'setAbsence', absence, hora: ahora() })
+    if (absence) {
+      avisar({
+        texto: `Ausencia de ${nombreDe(absence.memberId)} registrada (${rango(absence.from, absence.to)}).`,
+        deshacer: () => dispatch({ type: 'setAbsence', absence: antes, hora: ahora() }),
+      })
+    } else if (antes) {
+      avisar({
+        texto: `Ausencia de ${nombreDe(antes.memberId)} retirada.`,
+        deshacer: () => dispatch({ type: 'setAbsence', absence: antes, hora: ahora() }),
+      })
+    }
+  }
+  // Deshacer una cobertura es una reasignación manual: queda en la bitácora junto a la aceptada.
+  function aceptarCobertura(proposal: CoverageProposal) {
+    const titulo = estado.tasks.find((t) => t.id === proposal.taskId)?.title ?? 'La tarea'
+    dispatch({ type: 'acceptProposal', proposal, hora: ahora() })
+    avisar({
+      texto: `${titulo} ahora es de ${nombreDe(proposal.candidateId)}.`,
+      deshacer: () => dispatch({ type: 'reassignTask', id: proposal.taskId, ownerId: proposal.currentOwnerId, hora: ahora() }),
+    })
+  }
+
   const conVersion = (n: ReactNode) => <VersionContext.Provider value={estado.version}>{n}</VersionContext.Provider>
 
   if (estado.fase === 'inicio') {
@@ -153,6 +190,7 @@ export default function App() {
         setPaso(null)
         setPagina('tablero')
         dispatch({ type: 'reset' })
+        avisar({ texto: 'Demo reiniciada con los datos de ejemplo.' })
       }}
       acciones={
         <>
@@ -163,15 +201,15 @@ export default function App() {
         </>
       }
     >
-      {pagina === 'tablero' && <TableroVista proyecto={proyecto.nombre} members={members} tasks={tasks} files={estado.files} contexto={contexto} decisiones={estado.decisiones} onIr={setPagina} />}
-      {pagina === 'integrantes' && <IntegrantesVista members={members} tasks={tasks} files={estado.files} dispatch={dispatch} />}
+      {pagina === 'tablero' && <TableroVista proyecto={proyecto.nombre} ejemplo={proyecto.ejemplo} members={members} tasks={tasks} files={estado.files} contexto={contexto} decisiones={estado.decisiones} onIr={setPagina} />}
+      {pagina === 'integrantes' && <IntegrantesVista members={members} tasks={tasks} files={estado.files} dispatch={dispatch} absence={estado.absence} />}
       {pagina === 'tareas' && <TareasVista members={members} tasks={tasks} files={estado.files} dispatch={dispatch} onIr={setPagina} />}
       {pagina === 'contingencia' && (
         <ContingenciaVista
           contexto={contexto}
           absence={estado.absence}
-          onSetAbsence={(absence) => dispatch({ type: 'setAbsence', absence, hora: ahora() })}
-          onAccept={(proposal) => dispatch({ type: 'acceptProposal', proposal, hora: ahora() })}
+          onSetAbsence={cambiarAusencia}
+          onAccept={aceptarCobertura}
         />
       )}
       {pagina === 'entrega' && (
