@@ -28,7 +28,8 @@ export function GuiaPresentacion({ paso, onIr, onSalir, extra }: Props) {
       if ((e.target as HTMLElement).closest('input, select, textarea, dialog[open]')) return
       if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); if (!ultimo) onIr(paso + 1) }
       else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); if (paso > 0) onIr(paso - 1) }
-      else if (e.key === 'Escape') onSalir()
+      // Con el menú lateral abierto (celular), Esc solo lo cierra; el guion sigue.
+      else if (e.key === 'Escape' && !document.querySelector('[data-abierto="true"]')) onSalir()
     }
     window.addEventListener('keydown', tecla)
     return () => window.removeEventListener('keydown', tecla)
