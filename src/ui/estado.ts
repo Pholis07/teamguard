@@ -1,6 +1,7 @@
 import { confirmProposal, createDemoState, DEMO_DATE, type Absence, type CoverageProposal, type Member, type RuleContext, type Task } from '../domain'
 import type { Entrega } from '../delivery/zip'
 import type { Decision } from '../delivery/acta'
+import { equilibrio } from './equilibrio'
 import { fechaValida, horasValidas, nombreValido, rango, type Proyecto } from './formato'
 
 /* Estado compartido. Las cargas no se guardan: se calculan a partir de aquí. */
@@ -60,7 +61,15 @@ function siguienteId(prefijo: string, ids: readonly string[]) {
 }
 
 const nombreDe = (estado: Estado, id: string) => estado.members.find((m) => m.id === id)?.name ?? id
-const anotar = (estado: Estado, hora: string, texto: string): Decision[] => [...estado.decisiones, { hora, texto }]
+/** Aplica un cambio y lo anota en la bitácora con el equilibrio de antes y de después. */
+const anotar = (antes: Estado, despues: Estado, hora: string, texto: string): Estado => {
+  const decision: Decision = {
+    hora,
+    texto,
+    equilibrio: { antes: equilibrio(contextoDe(antes)).indice, despues: equilibrio(contextoDe(despues)).indice },
+  }
+  return { ...despues, decisiones: [...antes.decisiones, decision] }
+}
 
 const tareaValida = (t: Task, members: readonly Member[]) =>
   nombreValido(t.title) && horasValidas(t.estimatedHours) && fechaValida(t.dueDate) && members.some((m) => m.id === t.ownerId)
@@ -113,11 +122,8 @@ export function reducer(estado: Estado, accion: Accion): Estado {
       const actual = estado.tasks.find((t) => t.id === accion.id)
       if (!actual || actual.ownerId === accion.ownerId || !estado.members.some((m) => m.id === accion.ownerId)) return estado
       const texto = `${actual.title} pasó de ${nombreDe(estado, actual.ownerId)} a ${nombreDe(estado, accion.ownerId)} (cambio manual)`
-      return {
-        ...estado,
-        tasks: estado.tasks.map((t) => (t.id === actual.id ? { ...t, ownerId: accion.ownerId } : t)),
-        decisiones: anotar(estado, accion.hora, texto),
-      }
+      const tasks = estado.tasks.map((t) => (t.id === actual.id ? { ...t, ownerId: accion.ownerId } : t))
+      return anotar(estado, { ...estado, tasks }, accion.hora, texto)
     }
     case 'removeTask':
       // Una tarea con archivos entregados no se borra: se perdería trabajo real del equipo.
@@ -129,7 +135,7 @@ export function reducer(estado: Estado, accion: Accion): Estado {
         const tasks = confirmProposal(contextoDe(estado), proposal)
         const titulo = tasks.find((t) => t.id === proposal.taskId)?.title ?? proposal.taskId
         const texto = `${titulo} pasó de ${nombreDe(estado, proposal.currentOwnerId)} a ${nombreDe(estado, proposal.candidateId)} (cobertura aceptada)`
-        return { ...estado, tasks, decisiones: anotar(estado, hora, texto) }
+        return anotar(estado, { ...estado, tasks }, hora, texto)
       } catch (error) {
         // Propuesta obsoleta (p. ej. doble clic en Aceptar): se ignora en vez de tumbar la app.
         console.warn(error)
@@ -142,7 +148,8 @@ export function reducer(estado: Estado, accion: Accion): Estado {
       const texto = absence
         ? `Se registró la ausencia de ${nombreDe(estado, absence.memberId)} del ${rango(absence.from, absence.to)}`
         : estado.absence && `Se retiró la ausencia de ${nombreDe(estado, estado.absence.memberId)}`
-      return { ...estado, absence, decisiones: texto ? anotar(estado, hora, texto) : estado.decisiones }
+      const nuevo = { ...estado, absence }
+      return texto ? anotar(estado, nuevo, hora, texto) : nuevo
     }
     case 'addFile':
       return { ...estado, files: [...estado.files, accion.entrega] }

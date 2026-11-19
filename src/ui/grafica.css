@@ -1,0 +1,12 @@
+/* Gráfica del equilibrio: tinta del tema, marcas finas, rejilla recesiva. */
+.g-eq { display: block; width: 100%; max-width: 640px; height: auto; overflow: visible; font-family: var(--fuente); }
+.g-linea { fill: none; stroke: var(--tx); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.g-marca { fill: var(--tx); stroke: var(--bg); stroke-width: 2; }
+.g-hit { fill: transparent; }
+.g-punto:hover .g-marca { r: 6; }
+.g-ref { stroke: var(--tx3); stroke-width: 1; stroke-dasharray: 3 4; }
+.g-base { stroke: var(--bd); stroke-width: 1; }
+.g-ref-t, .g-eje { fill: var(--tx3); font-size: 11px; }
+.g-valor { fill: var(--tx); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* En pantallas angostas el SVG se reduce ~40 %: se compensa para que el texto quede legible (~11 px). */
+@media (max-width: 720px) { .g-ref-t, .g-eje { font-size: 17px; } .g-valor { font-size: 19px; } }

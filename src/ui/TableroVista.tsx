@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
-import { calculateLoads, simulateAssignment, type Member, type RuleContext, type Task } from '../domain'
+import { calculateLoads, isTaskOverdue, simulateAssignment, type Member, type RuleContext, type Task } from '../domain'
+import { serieEquilibrio, type Decision } from '../delivery/acta'
+import { GraficaEquilibrio } from './GraficaEquilibrio'
 import { BarraCarga, BaseDeDatos, Callout, Checklist, Etiqueta, Icono, Pagina, Propiedades, Toggle } from './bloques'
 import { equilibrio } from './equilibrio'
 import { COLOR_RIESGO, ESTADO_TAREA, fecha, horas, miembroPorId, pct, plural, type PaginaId } from './formato'
@@ -11,6 +13,8 @@ type Props = {
   tasks: readonly Task[]
   /** Contexto de reglas (incluye la ausencia) para el índice de equilibrio. */
   contexto: RuleContext
+  /** Bitácora: alimenta la gráfica del equilibrio en el tiempo. */
+  decisiones: readonly Decision[]
   onIr: (pagina: PaginaId) => void
 }
 
@@ -24,7 +28,7 @@ function Avatar({ member, members, chico }: { member: Member; members: readonly 
   return <span className={`av av${i}${chico ? ' av-s' : ''}`} aria-hidden="true">{member.name[0]}</span>
 }
 
-export function TableroVista({ proyecto, members, tasks, contexto, onIr }: Props) {
+export function TableroVista({ proyecto, members, tasks, contexto, decisiones, onIr }: Props) {
   const abiertas = tasks.filter((t) => t.status !== 'done')
   const [sim, setSim] = useState<{ taskId: string; candidateId: string } | null>(null)
   const [simulado, setSimulado] = useState(leerSimulo)
@@ -89,6 +93,7 @@ export function TableroVista({ proyecto, members, tasks, contexto, onIr }: Props
   const tareasSim = simulacion ? tasks.map((t) => (t.id === simulacion.taskId ? { ...t, ownerId: simulacion.candidateId } : t)) : tasks
   const tareasDe = (id: string) => tareasSim.filter((t) => t.ownerId === id && t.status !== 'done')
   const eq = equilibrio(contexto)
+  const vencidas = abiertas.filter((t) => isTaskOverdue(t, contexto.asOf))
   const eqSim = simulacion ? equilibrio({ ...contexto, tasks: tareasSim }) : null
 
   return (
@@ -119,6 +124,11 @@ export function TableroVista({ proyecto, members, tasks, contexto, onIr }: Props
         {alto ? 'Hay sobrecarga.' : 'Todo en orden.'}
         <span className="fa">{alto ? `${nombres} ${plural(sobrecargados.length, 'pasa', 'pasan')} de su disponibilidad.` : 'Nadie está sobrecargado.'}</span>
       </p>
+      {vencidas.length > 0 && (
+        <p className="p-nota" role="status">
+          <Icono nombre="alerta" tam={14} /> {vencidas.length} {plural(vencidas.length, 'tarea vencida', 'tareas vencidas')} sin terminar: {vencidas.map((t) => `${t.title} (venció el ${fecha(t.dueDate)})`).join(', ')}.
+        </p>
+      )}
 
       {!sim && (
         <div className="p-acciones">
@@ -151,6 +161,13 @@ export function TableroVista({ proyecto, members, tasks, contexto, onIr }: Props
             <button type="button" className="btn btn-s" onClick={() => setSim(null)}><Icono nombre="x" />Cancelar simulación</button>
           </div>
         </Callout>
+      )}
+
+      {decisiones.length > 0 && (
+        <section className="n-bd">
+          <h2 className="n-bd-tit">Equilibrio en el tiempo</h2>
+          <GraficaEquilibrio puntos={serieEquilibrio(decisiones)} />
+        </section>
       )}
 
       <BaseDeDatos
@@ -208,7 +225,7 @@ export function TableroVista({ proyecto, members, tasks, contexto, onIr }: Props
               </td>
               <td className="num">{horas(t.estimatedHours)} h</td>
               <td className="num">{fecha(t.dueDate)}</td>
-              <td><Etiqueta color={est.color}>{est.texto}</Etiqueta></td>
+              <td><Etiqueta color={est.color}>{est.texto}</Etiqueta>{isTaskOverdue(t, contexto.asOf) && <> <Etiqueta color="rojo">Vencida</Etiqueta></>}</td>
             </tr>
           )
         })}

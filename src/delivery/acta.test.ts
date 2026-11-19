@@ -9,7 +9,10 @@ const entregas = [
   { taskId: 't1', uploaderId: 'm1', file: new File(['a'], 'boceto|v1.png') },
   { taskId: 't3', uploaderId: 'm3', file: new File(['b'], 'resumen.txt') },
 ]
-const decisiones = [{ hora: '10:42', texto: 'Boceto pasó de Ana a Luis (cobertura aceptada)' }]
+const decisiones = [
+  { hora: '10:41', texto: 'Se registró la ausencia de Ana del 19 al 21 nov', equilibrio: { antes: 100, despues: 57 } },
+  { hora: '10:42', texto: 'Boceto pasó de Ana a Luis (cobertura aceptada)', equilibrio: { antes: 57, despues: 100 } },
+]
 
 test('el acta dice quién es responsable, quién subió cada archivo y qué se decidió', () => {
   const acta = actaEntrega(entregas, reasignadas, DEMO_MEMBERS, decisiones, '19 de noviembre de 2026')
@@ -17,12 +20,15 @@ test('el acta dice quién es responsable, quién subió cada archivo y qué se d
   expect(acta).toContain('| Ficha | Luis | 2 h | Sin archivo |')
   expect(acta).toContain('- **Luis**: 5 de 6 h asignadas · 0 archivos subidos')
   expect(acta).toContain('- **Ana**: 0 de 4 h asignadas · 1 archivo subido')
-  expect(acta).toContain('- 10:42 · Boceto pasó de Ana a Luis (cobertura aceptada)')
+  expect(acta).toContain('- 10:42 · Boceto pasó de Ana a Luis (cobertura aceptada) · equilibrio 57 → 100')
+  expect(acta).toContain('| Inicio | 100 | ██████████ |')
+  expect(acta).toContain('| 10:41 · Se registró la ausencia de Ana del 19 al 21 nov | 57 | ██████░░░░ |')
 })
 
 test('sin decisiones el acta lo dice; el ZIP lleva el acta en la raíz', async () => {
   const acta = actaEntrega(entregas, DEMO_TASKS, DEMO_MEMBERS, [], 'hoy')
   expect(acta).toContain('- Sin decisiones registradas.')
+  expect(acta).not.toContain('Equilibrio en el tiempo')
   const zip = await JSZip.loadAsync(await armarZip(entregas, DEMO_TASKS, DEMO_MEMBERS, acta).generateAsync({ type: 'uint8array' }))
   expect(await zip.file(NOMBRE_ACTA)!.async('string')).toBe(acta)
 })

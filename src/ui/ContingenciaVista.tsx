@@ -4,6 +4,7 @@ import {
   type Absence, type CoverageProposal, type Member, type RuleContext,
 } from '../domain'
 import { BarraCarga, Callout, Etiqueta, Icono, Pagina, Propiedades } from './bloques'
+import { equilibrio } from './equilibrio'
 import { COLOR_RIESGO, fecha, fechaValida, horas, miembroPorId, rango } from './formato'
 import './paginas.css'
 
@@ -205,6 +206,9 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
           <p className="p-grande">
             Pasar <b>{tarea.title}</b> de {dueno.name} a {nuevo.name}
             {' '}<span className="fa num">({horas(tarea.estimatedHours)} h)</span>
+          </p>
+          <p className="p-nota num">
+            Equilibrio {equilibrio(contexto).indice} → <b>{equilibrio({ ...contexto, tasks: tasks.map((t) => (t.id === propuesta.taskId ? { ...t, ownerId: propuesta.candidateId } : t)) }).indice}</b> si aceptas
           </p>
           {aviso && <p className="p-nota" role="status">{aviso}</p>}
 

@@ -2,7 +2,18 @@ import { calculateLoads, type Member, type Task } from '../domain'
 import { rutasZip, type Entrega } from './zip'
 
 /** Una decisión del equipo ya redactada (cobertura aceptada, ausencia registrada…). */
-export type Decision = { hora: string; texto: string }
+export type Decision = { hora: string; texto: string; equilibrio: { antes: number; despues: number } }
+
+/** Puntos del equilibrio en el tiempo: el valor antes de la primera decisión y el que dejó cada una. */
+export function serieEquilibrio(decisiones: readonly Decision[]) {
+  if (decisiones.length === 0) return []
+  return [
+    { etiqueta: 'Inicio', detalle: 'Antes de la primera decisión', valor: decisiones[0].equilibrio.antes },
+    ...decisiones.map((d) => ({ etiqueta: d.hora, detalle: d.texto, valor: d.equilibrio.despues })),
+  ]
+}
+
+const barra = (valor: number) => '█'.repeat(Math.round(valor / 10)) + '░'.repeat(10 - Math.round(valor / 10))
 
 const celda = (texto: string) => texto.replaceAll('|', '\\|')
 const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`
@@ -45,8 +56,22 @@ export function actaEntrega(
     '',
     '## Decisiones del equipo',
     '',
-    ...(decisiones.length ? decisiones.map((d) => `- ${d.hora} · ${d.texto}`) : ['- Sin decisiones registradas.']),
+    ...(decisiones.length
+      ? decisiones.map((d) => `- ${d.hora} · ${d.texto} · equilibrio ${d.equilibrio.antes} → ${d.equilibrio.despues}`)
+      : ['- Sin decisiones registradas.']),
     '',
+    ...(decisiones.length
+      ? [
+          '## Equilibrio en el tiempo',
+          '',
+          'Porcentaje de las horas abiertas que caben en el tiempo real de su responsable.',
+          '',
+          '| Momento | Equilibrio | |',
+          '|---|---|---|',
+          ...serieEquilibrio(decisiones).map((p) => `| ${p.etiqueta === 'Inicio' ? 'Inicio' : `${p.etiqueta} · ${celda(p.detalle)}`} | ${p.valor} | ${barra(p.valor)} |`),
+          '',
+        ]
+      : []),
     'TeamGuard no hace la tarea: protege los acuerdos y reúne el trabajo real del equipo.',
     '',
   ].join('\n')
