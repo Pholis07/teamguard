@@ -8,21 +8,30 @@ import {
   type RuleContext,
 } from './domain'
 import { EntregaVista } from './delivery/EntregaVista'
+import type { Decision } from './delivery/acta'
 import { progresoEntrega, type Entrega } from './delivery/zip'
 import { ContingenciaVista } from './ui/ContingenciaVista'
+import { rango } from './ui/formato'
 import { TableroVista } from './ui/TableroVista'
 
 // Estado compartido. Las cargas no se guardan: las calcula B a partir de aquí.
-type Estado = ReturnType<typeof createDemoState> & { files: Entrega[] }
+type Estado = ReturnType<typeof createDemoState> & { files: Entrega[]; decisiones: Decision[] }
 
 // Simular, editar y rechazar no pasan por aquí: solo aceptar cambia ownerId.
+// `hora` la pone quien despacha, para que el reducer siga siendo puro.
 type Accion =
-  | { type: 'acceptProposal'; proposal: CoverageProposal }
-  | { type: 'setAbsence'; absence: Absence | null }
+  | { type: 'acceptProposal'; proposal: CoverageProposal; hora: string }
+  | { type: 'setAbsence'; absence: Absence | null; hora: string }
   | { type: 'addFile'; entrega: Entrega }
   | { type: 'reset' }
 
-const estadoInicial = (): Estado => ({ ...createDemoState(), files: [] })
+const estadoInicial = (): Estado => ({ ...createDemoState(), files: [], decisiones: [] })
+
+const ahora = () => new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+
+const nombreDe = (estado: Estado, id: string) => estado.members.find((m) => m.id === id)?.name ?? id
+
+const anotar = (estado: Estado, hora: string, texto: string): Decision[] => [...estado.decisiones, { hora, texto }]
 
 const contextoDe = (estado: Estado): RuleContext => ({
   members: estado.members,
@@ -33,16 +42,27 @@ const contextoDe = (estado: Estado): RuleContext => ({
 
 function reducer(estado: Estado, accion: Accion): Estado {
   switch (accion.type) {
-    case 'acceptProposal':
+    case 'acceptProposal': {
+      const { proposal, hora } = accion
       try {
-        return { ...estado, tasks: confirmProposal(contextoDe(estado), accion.proposal) }
+        const tasks = confirmProposal(contextoDe(estado), proposal)
+        const titulo = tasks.find((t) => t.id === proposal.taskId)?.title ?? proposal.taskId
+        const texto = `${titulo} pasó de ${nombreDe(estado, proposal.currentOwnerId)} a ${nombreDe(estado, proposal.candidateId)} (cobertura aceptada)`
+        return { ...estado, tasks, decisiones: anotar(estado, hora, texto) }
       } catch (error) {
         // Propuesta obsoleta (p. ej. doble clic en Aceptar): se ignora en vez de tumbar la app.
         console.warn(error)
         return estado
       }
-    case 'setAbsence':
-      return { ...estado, absence: accion.absence }
+    }
+    case 'setAbsence': {
+      const { absence, hora } = accion
+      // Solo fechas: el motivo de una ausencia nunca se registra.
+      const texto = absence
+        ? `Se registró la ausencia de ${nombreDe(estado, absence.memberId)} del ${rango(absence.from, absence.to)}`
+        : estado.absence && `Se retiró la ausencia de ${nombreDe(estado, estado.absence.memberId)}`
+      return { ...estado, absence, decisiones: texto ? anotar(estado, hora, texto) : estado.decisiones }
+    }
     case 'addFile':
       return { ...estado, files: [...estado.files, accion.entrega] }
     case 'reset':
@@ -81,8 +101,8 @@ const VISTAS: Record<Vista, VistaDef> = {
       <ContingenciaVista
         contexto={contexto}
         absence={estado.absence}
-        onSetAbsence={(absence) => dispatch({ type: 'setAbsence', absence })}
-        onAccept={(proposal) => dispatch({ type: 'acceptProposal', proposal })}
+        onSetAbsence={(absence) => dispatch({ type: 'setAbsence', absence, hora: ahora() })}
+        onAccept={(proposal) => dispatch({ type: 'acceptProposal', proposal, hora: ahora() })}
       />
     ),
   },
@@ -98,6 +118,7 @@ const VISTAS: Record<Vista, VistaDef> = {
         tasks={estado.tasks}
         members={estado.members}
         files={estado.files}
+        decisiones={estado.decisiones}
         onAddFile={(entrega) => dispatch({ type: 'addFile', entrega })}
       />
     ),

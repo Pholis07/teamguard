@@ -31,9 +31,12 @@ export function rutasZip(entregas: readonly Entrega[], tasks: readonly Task[], m
   })
 }
 
-/** ZIP con los bytes originales de cada archivo. */
-export function armarZip(entregas: readonly Entrega[], tasks: readonly Task[], members: readonly Member[]) {
+export const NOMBRE_ACTA = 'ACTA-DE-ENTREGA.md'
+
+/** ZIP con los bytes originales de cada archivo y, si se da, el acta en la raíz. */
+export function armarZip(entregas: readonly Entrega[], tasks: readonly Task[], members: readonly Member[], acta?: string) {
   const zip = new JSZip()
   for (const { path, file } of rutasZip(entregas, tasks, members)) zip.file(path, file.arrayBuffer())
+  if (acta) zip.file(NOMBRE_ACTA, acta)
   return zip
 }

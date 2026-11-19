@@ -1,16 +1,18 @@
 import { useState } from 'react'
 import type { Member, Task } from '../domain'
-import { armarZip, progresoEntrega, type Entrega } from './zip'
+import { actaEntrega, type Decision } from './acta'
+import { armarZip, NOMBRE_ACTA, progresoEntrega, type Entrega } from './zip'
 import './entrega.css'
 
 type Props = {
   tasks: readonly Task[]
   members: readonly Member[]
   files: readonly Entrega[]
+  decisiones: readonly Decision[]
   onAddFile: (entrega: Entrega) => void
 }
 
-export function EntregaVista({ tasks, members, files, onAddFile }: Props) {
+export function EntregaVista({ tasks, members, files, decisiones, onAddFile }: Props) {
   const [error, setError] = useState<string | null>(null)
   const nombre = (id: string) => members.find((m) => m.id === id)?.name ?? id
   const avatar = (id: string) => `av av${members.findIndex((m) => m.id === id) + 1}`
@@ -20,7 +22,9 @@ export function EntregaVista({ tasks, members, files, onAddFile }: Props) {
   async function descargar() {
     setError(null)
     try {
-      const blob = await armarZip(files, tasks, members).generateAsync({ type: 'blob' })
+      const fecha = new Date().toLocaleString('es-MX', { dateStyle: 'long', timeStyle: 'short', hourCycle: 'h23' })
+      const acta = actaEntrega(files, tasks, members, decisiones, fecha)
+      const blob = await armarZip(files, tasks, members, acta).generateAsync({ type: 'blob' })
       const url = URL.createObjectURL(blob)
       const enlace = document.createElement('a')
       enlace.href = url
@@ -102,6 +106,26 @@ export function EntregaVista({ tasks, members, files, onAddFile }: Props) {
             )
           })}
         </ul>
+      </section>
+      <section aria-labelledby="h-decisiones" className="entrega-seccion">
+        <div className="entrega-seccion-cabeza">
+          <h2 id="h-decisiones">Decisiones del equipo</h2>
+          <span className="fa">El ZIP incluye {NOMBRE_ACTA} con este registro.</span>
+        </div>
+        <ol className="panel entrega-lista bitacora">
+          {decisiones.length === 0 ? (
+            <li className="entrega-fila fa">
+              Todavía no hay decisiones. Las ausencias y las coberturas aceptadas aparecen aquí.
+            </li>
+          ) : (
+            decisiones.map((d, i) => (
+              <li key={i} className="entrega-fila">
+                <span className="num fa">{d.hora}</span>
+                <span>{d.texto}</span>
+              </li>
+            ))
+          )}
+        </ol>
       </section>
     </>
   )
