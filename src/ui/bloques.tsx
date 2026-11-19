@@ -145,11 +145,11 @@ export function Checklist({ items, onCambiar }: {
   )
 }
 
-/** Triángulo ▸ que gira 90° y despliega el contenido (details nativo). */
+/** Chevrón (Rune) que gira 90° y despliega el contenido (details nativo). */
 export function Toggle({ titulo, abierto, children }: { titulo: ReactNode; abierto?: boolean; children: ReactNode }) {
   return (
     <details className="n-toggle" open={abierto}>
-      <summary><span className="n-flecha" aria-hidden="true">▶</span>{titulo}</summary>
+      <summary><span className="n-flecha" aria-hidden="true"><Icono nombre="desplegar" tam={14} /></span>{titulo}</summary>
       <div className="n-toggle-c">{children}</div>
     </details>
   )

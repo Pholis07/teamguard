@@ -221,7 +221,7 @@ button.n-caja { cursor: pointer; }
 .n-toggle > summary { display: flex; align-items: center; gap: 6px; list-style: none; cursor: pointer; min-height: 30px; border-radius: 4px; font-weight: 500; }
 .n-toggle > summary::-webkit-details-marker { display: none; }
 .n-toggle > summary:hover { background: var(--hover); }
-.n-flecha { display: inline-block; width: 20px; text-align: center; color: var(--tx2); font-size: 12px; transition: transform .15s ease-out; }
+.n-flecha { display: inline-grid; place-items: center; width: 20px; color: var(--tx2); transition: transform .15s ease-out; }
 .n-toggle[open] > summary .n-flecha { transform: rotate(90deg); }
 .n-toggle-c { padding: 4px 0 4px 26px; color: var(--tx2); }
 
