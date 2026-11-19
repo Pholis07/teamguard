@@ -50,7 +50,7 @@ h2 { margin: 0; font-family: var(--serif); font-weight: 400; font-size: 26px; le
 .sn button[aria-current]:has(.n)::after { margin-left: 8px; }
 .topbar .acciones { margin-left: auto; display: flex; gap: 8px; }
 .miembros { display: flex; flex-direction: column; gap: 2px; padding: 0 10px; font-size: 13px; color: var(--smut); }
-.miembros span { display: flex; align-items: center; gap: 9px; min-height: 28px; }
+.miembros > span { display: flex; align-items: center; gap: 9px; min-height: 28px; }
 .relleno { flex: 1; min-height: 40px; }
 .lema { margin: 0; padding: 0 10px; font-size: 21px; line-height: 1.15; color: var(--sink); }
 .lema em { color: var(--smut); }
