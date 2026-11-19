@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState, type Dispatch, type ReactNode } from 'react'
+import { useEffect, useMemo, useReducer, useState, type Dispatch, type ReactNode } from 'react'
 import {
   confirmProposal,
   createDemoState,
@@ -9,6 +9,8 @@ import {
 } from './domain'
 import { EntregaVista } from './delivery/EntregaVista'
 import { progresoEntrega, type Entrega } from './delivery/zip'
+import { ContingenciaVista } from './ui/ContingenciaVista'
+import { TableroVista } from './ui/TableroVista'
 
 // Estado compartido. Las cargas no se guardan: las calcula B a partir de aquí.
 type Estado = ReturnType<typeof createDemoState> & { files: Entrega[] }
@@ -70,12 +72,19 @@ const VISTAS: Record<Vista, VistaDef> = {
   tablero: {
     label: 'Tablero',
     icon: icono(<><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>),
-    render: () => <p className="fa">Tablero · pantalla en construcción (A).</p>,
+    render: ({ estado }) => <TableroVista members={estado.members} tasks={estado.tasks} />,
   },
   contingencia: {
     label: 'Contingencia',
     icon: icono(<><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="4" /><path d="m4.93 4.93 4.24 4.24" /><path d="m14.83 9.17 4.24-4.24" /><path d="m14.83 14.83 4.24 4.24" /><path d="m9.17 14.83-4.24 4.24" /></>),
-    render: () => <p className="fa">Contingencia · pantalla en construcción (A + B).</p>,
+    render: ({ estado, contexto, dispatch }) => (
+      <ContingenciaVista
+        contexto={contexto}
+        absence={estado.absence}
+        onSetAbsence={(absence) => dispatch({ type: 'setAbsence', absence })}
+        onAccept={(proposal) => dispatch({ type: 'acceptProposal', proposal })}
+      />
+    ),
   },
   entrega: {
     label: 'Entrega',
@@ -98,6 +107,7 @@ const VISTAS: Record<Vista, VistaDef> = {
 export default function App() {
   const [vista, setVista] = useState<Vista>('tablero')
   const [estado, dispatch] = useReducer(reducer, undefined, estadoInicial)
+  const contexto = useMemo(() => contextoDe(estado), [estado])
   const [oscuro, setOscuro] = useState(() => matchMedia('(prefers-color-scheme: dark)').matches)
   useEffect(() => {
     document.documentElement.classList.toggle('dark', oscuro)
@@ -156,7 +166,7 @@ export default function App() {
           </span>
         </div>
         <main className="contenido">
-          {VISTAS[vista].render({ estado, contexto: contextoDe(estado), dispatch })}
+          {VISTAS[vista].render({ estado, contexto, dispatch })}
         </main>
       </div>
     </div>
