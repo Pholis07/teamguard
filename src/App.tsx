@@ -5,7 +5,7 @@ import { GuiaPresentacion } from './Presentar'
 import { EntregaVista } from './delivery/EntregaVista'
 import { progresoEntrega } from './delivery/zip'
 import { contextoDe, estadoInicial, reducer } from './ui/estado'
-import type { PaginaId, Tema } from './ui/formato'
+import { ahora, type PaginaId, type Tema } from './ui/formato'
 import { Icono } from './ui/bloques'
 import { Shell } from './ui/Shell'
 import { Inicio } from './ui/Inicio'
@@ -13,8 +13,6 @@ import { TableroVista } from './ui/TableroVista'
 import { IntegrantesVista } from './ui/IntegrantesVista'
 import { TareasVista } from './ui/TareasVista'
 import { ContingenciaVista } from './ui/ContingenciaVista'
-
-const ahora = () => new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
 
 const CLAVE_TEMA = 'tg-tema'
 
@@ -112,7 +110,7 @@ export default function App() {
     >
       {pagina === 'tablero' && <TableroVista proyecto={proyecto.nombre} members={members} tasks={tasks} onIr={setPagina} />}
       {pagina === 'integrantes' && <IntegrantesVista members={members} tasks={tasks} dispatch={dispatch} />}
-      {pagina === 'tareas' && <TareasVista members={members} tasks={tasks} dispatch={dispatch} onIr={setPagina} />}
+      {pagina === 'tareas' && <TareasVista members={members} tasks={tasks} files={estado.files} dispatch={dispatch} onIr={setPagina} />}
       {pagina === 'contingencia' && (
         <ContingenciaVista
           contexto={contexto}

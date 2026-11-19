@@ -1,14 +1,16 @@
 import { useEffect, useRef, type Dispatch } from 'react'
 import type { Member, Task } from '../domain'
+import type { Entrega } from '../delivery/zip'
 import type { Accion } from './estado'
 import { BaseDeDatos, Callout, Etiqueta, Icono, Pagina, Propiedades } from './bloques'
-import { ESTADO_TAREA, fechaValida, horas, horasValidas, nombreValido, plural, type PaginaId } from './formato'
+import { ahora, ESTADO_TAREA, fechaValida, horas, horasValidas, nombreValido, plural, type PaginaId } from './formato'
 import { Avatar, CeldaTexto } from './IntegrantesVista'
 import './datos.css'
 
 type Props = {
   members: readonly Member[]
   tasks: readonly Task[]
+  files: readonly Entrega[]
   dispatch: Dispatch<Accion>
   /** Navega a otra página (para «Ir a 👥 Integrantes»). */
   onIr?: (p: PaginaId) => void
@@ -18,7 +20,7 @@ const ESTADOS = Object.keys(ESTADO_TAREA) as Task['status'][]
 const leerHoras = (s: string) => (s.trim() === '' ? NaN : Number(s.trim().replace(',', '.')))
 const FECHA_INICIAL = '2026-11-20'
 
-export function TareasVista({ members, tasks, dispatch, onIr }: Props) {
+export function TareasVista({ members, tasks, files, dispatch, onIr }: Props) {
   const nuevaRef = useRef<HTMLInputElement | null>(null)
   const esperando = useRef(false)
 
@@ -70,6 +72,7 @@ export function TareasVista({ members, tasks, dispatch, onIr }: Props) {
           const dueno = members.findIndex((m) => m.id === t.ownerId)
           const est = ESTADO_TAREA[t.status]
           const ultima = i === tasks.length - 1
+          const conArchivos = files.some((f) => f.taskId === t.id)
           return (
             <tr key={t.id} className="dt-fila">
               <td>
@@ -88,7 +91,7 @@ export function TareasVista({ members, tasks, dispatch, onIr }: Props) {
                     className="cel"
                     aria-label={`Responsable de ${t.title}`}
                     value={t.ownerId}
-                    onChange={(e) => dispatch({ type: 'updateTask', id: t.id, cambios: { ownerId: e.target.value } })}
+                    onChange={(e) => dispatch({ type: 'reassignTask', id: t.id, ownerId: e.target.value, hora: ahora() })}
                   >
                     {dueno < 0 && <option value={t.ownerId}>Sin responsable</option>}
                     {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -130,7 +133,14 @@ export function TareasVista({ members, tasks, dispatch, onIr }: Props) {
                       onChange={(e) => dispatch({ type: 'updateTask', id: t.id, cambios: { requiresFile: e.target.checked } })}
                     />
                   </label>
-                  <button type="button" className="btn btn-t dt-borrar" aria-label={`Eliminar ${t.title}`} title={`Eliminar ${t.title}`} onClick={() => dispatch({ type: 'removeTask', id: t.id })}>
+                  <button
+                    type="button"
+                    className="btn btn-t dt-borrar"
+                    disabled={conArchivos}
+                    aria-label={conArchivos ? `${t.title} tiene archivos entregados y no se puede eliminar` : `Eliminar ${t.title}`}
+                    title={conArchivos ? 'Tiene archivos entregados: no se puede eliminar' : `Eliminar ${t.title}`}
+                    onClick={() => dispatch({ type: 'removeTask', id: t.id })}
+                  >
                     <Icono nombre="basura" tam={15} />
                   </button>
                 </div>

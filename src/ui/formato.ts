@@ -42,3 +42,6 @@ export function fechaValida(iso: string) {
   const d = new Date(`${iso}T00:00:00Z`)
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === iso
 }
+
+/** Hora local «HH:MM» para la bitácora; la pone quien despacha, no el reducer. */
+export const ahora = () => new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })

@@ -34,7 +34,9 @@ export type Accion =
   | { type: 'updateMember'; id: string; cambios: Partial<Omit<Member, 'id'>> }
   | { type: 'removeMember'; id: string }
   | ({ type: 'addTask' } & NuevaTarea)
-  | { type: 'updateTask'; id: string; cambios: Partial<Omit<Task, 'id'>> }
+  | { type: 'updateTask'; id: string; cambios: Partial<Omit<Task, 'id' | 'ownerId'>> }
+  // Cambio manual de responsable: siempre queda en la bitácora (y en el acta).
+  | { type: 'reassignTask'; id: string; ownerId: string; hora: string }
   | { type: 'removeTask'; id: string }
   | { type: 'acceptProposal'; proposal: CoverageProposal; hora: string }
   | { type: 'setAbsence'; absence: Absence | null; hora: string }
@@ -104,8 +106,20 @@ export function reducer(estado: Estado, accion: Accion): Estado {
       if (!tareaValida(nueva, estado.members)) return estado
       return { ...estado, tasks: estado.tasks.map((t) => (t.id === actual.id ? nueva : t)) }
     }
+    case 'reassignTask': {
+      const actual = estado.tasks.find((t) => t.id === accion.id)
+      if (!actual || actual.ownerId === accion.ownerId || !estado.members.some((m) => m.id === accion.ownerId)) return estado
+      const texto = `${actual.title} pasó de ${nombreDe(estado, actual.ownerId)} a ${nombreDe(estado, accion.ownerId)} (cambio manual)`
+      return {
+        ...estado,
+        tasks: estado.tasks.map((t) => (t.id === actual.id ? { ...t, ownerId: accion.ownerId } : t)),
+        decisiones: anotar(estado, accion.hora, texto),
+      }
+    }
     case 'removeTask':
-      return { ...estado, tasks: estado.tasks.filter((t) => t.id !== accion.id), files: estado.files.filter((f) => f.taskId !== accion.id) }
+      // Una tarea con archivos entregados no se borra: se perdería trabajo real del equipo.
+      if (estado.files.some((f) => f.taskId === accion.id)) return estado
+      return { ...estado, tasks: estado.tasks.filter((t) => t.id !== accion.id) }
     case 'acceptProposal': {
       const { proposal, hora } = accion
       try {
