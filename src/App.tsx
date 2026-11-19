@@ -52,14 +52,27 @@ type VistaProps = { estado: Estado; contexto: RuleContext; dispatch: Dispatch<Ac
 
 type Vista = 'tablero' | 'contingencia' | 'entrega'
 
-const VISTAS: Record<Vista, { label: string; render: (props: VistaProps) => ReactNode }> = {
-  tablero: { label: 'Tablero', render: () => <p>Tablero (A · src/ui)</p> },
+// Iconos del mockup v4 (trazos Lucide).
+const icono = (d: ReactNode) => (
+  <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    {d}
+  </svg>
+)
+
+const VISTAS: Record<Vista, { label: string; icon: ReactNode; render: (props: VistaProps) => ReactNode }> = {
+  tablero: {
+    label: 'Tablero',
+    icon: icono(<><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>),
+    render: () => <p className="fa">Tablero · pantalla en construcción (A).</p>,
+  },
   contingencia: {
     label: 'Contingencia',
-    render: () => <p>Contingencia (A + B · src/ui, src/domain)</p>,
+    icon: icono(<><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="4" /><path d="m4.93 4.93 4.24 4.24" /><path d="m14.83 9.17 4.24-4.24" /><path d="m14.83 14.83 4.24 4.24" /><path d="m9.17 14.83-4.24 4.24" /></>),
+    render: () => <p className="fa">Contingencia · pantalla en construcción (A + B).</p>,
   },
   entrega: {
     label: 'Entrega',
+    icon: icono(<><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" /><path d="m3.3 7 8.7 5 8.7-5" /><path d="M12 22V12" /></>),
     render: ({ estado, dispatch }) => (
       <EntregaVista
         tasks={estado.tasks}
@@ -76,22 +89,52 @@ export default function App() {
   const [estado, dispatch] = useReducer(reducer, undefined, estadoInicial)
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>TeamGuard</h1>
-        <nav>
+    <div className="shell">
+      <aside className="side">
+        <div className="marca serif">
+          <img src="/brand/tigre-blanco.png" alt="" width="30" height="30" />
+          TeamGuard
+        </div>
+        <p className="lbl">Proyecto</p>
+        <nav className="sn" aria-label="Secciones">
           {(Object.keys(VISTAS) as Vista[]).map((id) => (
             <button
               key={id}
               aria-current={vista === id ? 'page' : undefined}
               onClick={() => setVista(id)}
             >
+              {VISTAS[id].icon}
               {VISTAS[id].label}
             </button>
           ))}
         </nav>
-      </header>
-      <main>{VISTAS[vista].render({ estado, contexto: contextoDe(estado), dispatch })}</main>
+        <p className="lbl">Integrantes</p>
+        <div className="miembros">
+          {estado.members.map((m, i) => (
+            <span key={m.id}>
+              <span className={`av av-s av${i + 1}`}>{m.name[0]}</span>
+              {m.name}
+            </span>
+          ))}
+        </div>
+        <div className="relleno" />
+        <p className="lema serif">
+          El trabajo es de todos.
+          <br />
+          <em>La responsabilidad también.</em>
+        </p>
+        <p className="demo">DATOS DE EJEMPLO</p>
+      </aside>
+      <div className="sheet">
+        <div className="topbar">
+          <span className="fa">Proyecto final</span>
+          <span className="fa">/</span>
+          <span>{VISTAS[vista].label}</span>
+        </div>
+        <main className="contenido">
+          {VISTAS[vista].render({ estado, contexto: contextoDe(estado), dispatch })}
+        </main>
+      </div>
     </div>
   )
 }

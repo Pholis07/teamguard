@@ -1,6 +1,0 @@
-/* Solo base. Colores, botones y navegación los define A en src/ui. */
-*, *::before, *::after { box-sizing: border-box; }
-body { margin: 0; font-family: system-ui, sans-serif; background: #fff; color: #111; }
-
-/* Marca de la pestaña activa que no depende del color (provisional hasta los estilos de A). */
-nav [aria-current='page'] { font-weight: 700; text-decoration: underline; }

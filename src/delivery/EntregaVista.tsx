@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Member, Task } from '../domain'
 import { armarZip, type Entrega } from './zip'
+import './entrega.css'
 
 type Props = {
   tasks: readonly Task[]
@@ -12,6 +13,7 @@ type Props = {
 export function EntregaVista({ tasks, members, files, onAddFile }: Props) {
   const [error, setError] = useState<string | null>(null)
   const nombre = (id: string) => members.find((m) => m.id === id)?.name ?? id
+  const avatar = (id: string) => `av av${members.findIndex((m) => m.id === id) + 1}`
   const obligatorias = tasks.filter((t) => t.requiresFile)
   const listas = obligatorias.filter((t) => files.some((f) => f.taskId === t.id)).length
   const faltan = obligatorias.length - listas
@@ -32,52 +34,76 @@ export function EntregaVista({ tasks, members, files, onAddFile }: Props) {
   }
 
   return (
-    <section>
-      <h2>Entrega unificada</h2>
-      <p role="status">
-        {listas} de {obligatorias.length} entregas listas
-      </p>
-      <ul>
-        {tasks.map((t) => {
-          const propios = files.filter((f) => f.taskId === t.id)
-          return (
-            <li key={t.id}>
-              <h3>
-                {t.title} · responsable: {nombre(t.ownerId)}
-                {t.requiresFile && (propios.length > 0 ? ' · ✓ lista' : ' · falta archivo')}
-              </h3>
-              {propios.length > 0 && (
-                <ul>
-                  {propios.map((f, i) => (
-                    <li key={i}>
-                      {f.file.name} · subido por {nombre(f.uploaderId)}
-                    </li>
+    <>
+      <header className="entrega-cabecera">
+        <h1>
+          <span role="status">
+            {listas} de {obligatorias.length} entregas listas.{' '}
+            <span className="fa">
+              {faltan > 0 ? `Falta archivo en ${faltan} tarea(s) obligatoria(s).` : 'Ya se puede descargar el ZIP.'}
+            </span>
+          </span>
+        </h1>
+        <button className="btn btn-p" disabled={faltan > 0} onClick={descargar}>
+          Descargar ZIP
+        </button>
+      </header>
+      {error && (
+        <p role="alert" className="chip c-wa">
+          {error}
+        </p>
+      )}
+      <section aria-labelledby="h-entregas" className="entrega-seccion">
+        <h2 id="h-entregas">Archivos por tarea</h2>
+        <ul className="panel entrega-lista">
+          {tasks.map((t) => {
+            const propios = files.filter((f) => f.taskId === t.id)
+            return (
+              <li key={t.id} className="entrega-fila">
+                <span className="entrega-tarea">
+                  <span className={avatar(t.ownerId)}>{nombre(t.ownerId)[0]}</span>
+                  <span>
+                    <span className="entrega-titulo">{t.title}</span>
+                    <span className="fa entrega-sub">responsable: {nombre(t.ownerId)}</span>
+                  </span>
+                </span>
+                <span className="entrega-archivos">
+                  {propios.length === 0 ? (
+                    <span className="fa">Sin archivo</span>
+                  ) : (
+                    propios.map((f, i) => (
+                      <span key={i}>
+                        {f.file.name} <span className="fa">· subido por {nombre(f.uploaderId)}</span>
+                      </span>
+                    ))
+                  )}
+                </span>
+                {t.requiresFile &&
+                  (propios.length > 0 ? (
+                    <span className="chip c-ok">✓ Lista</span>
+                  ) : (
+                    <span className="chip c-wa">Falta archivo</span>
                   ))}
-                </ul>
-              )}
-              <label>
-                Adjuntar a {t.title}{' '}
-                <input
-                  type="file"
-                  multiple
-                  onChange={(e) => {
-                    // Autor = responsable al momento de subir; una reasignación posterior no lo cambia.
-                    for (const file of Array.from(e.target.files ?? [])) {
-                      onAddFile({ taskId: t.id, uploaderId: t.ownerId, file })
-                    }
-                    e.target.value = ''
-                  }}
-                />
-              </label>
-            </li>
-          )
-        })}
-      </ul>
-      <button disabled={faltan > 0} onClick={descargar}>
-        Descargar ZIP
-      </button>
-      {faltan > 0 && <p>Falta archivo en {faltan} tarea(s) obligatoria(s).</p>}
-      {error && <p role="alert">{error}</p>}
-    </section>
+                <label className="btn btn-s">
+                  Adjuntar<span className="sr-only"> a {t.title}</span>
+                  <input
+                    type="file"
+                    multiple
+                    className="sr-only"
+                    onChange={(e) => {
+                      // Autor = responsable al momento de subir; una reasignación posterior no lo cambia.
+                      for (const file of Array.from(e.target.files ?? [])) {
+                        onAddFile({ taskId: t.id, uploaderId: t.ownerId, file })
+                      }
+                      e.target.value = ''
+                    }}
+                  />
+                </label>
+              </li>
+            )
+          })}
+        </ul>
+      </section>
+    </>
   )
 }
