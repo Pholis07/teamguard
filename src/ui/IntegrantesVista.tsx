@@ -214,7 +214,7 @@ export function IntegrantesVista({ members, tasks, files, dispatch, absence }: P
                     disabled={bloqueado}
                     onClick={() => eliminar(m, i)}
                   >
-                    <Icono nombre="basura" tam={15} />
+                    <Icono nombre="basura" tam={16} />
                   </button>
                   {bloqueado && <span className="dt-motivo" aria-hidden="true">Tiene {suyas.length} {plural(suyas.length, 'tarea', 'tareas')}</span>}
                 </div>
@@ -258,7 +258,7 @@ export function IntegrantesVista({ members, tasks, files, dispatch, absence }: P
             <td className="num dt-cuenta" data-et="Tareas">0</td>
             <td data-et="Carga">
               <div className="dt-acciones">
-                <button type="button" className="btn btn-p" onClick={() => confirmarBorrador(true)}>Agregar</button>
+                <button type="button" className="btn btn-p" disabled={!!msgNombre(borrador.nombre) || !!msgHoras(borrador.horas)} onClick={() => confirmarBorrador(true)}>Agregar</button>
                 <button type="button" className="btn btn-s" onClick={cerrarBorrador}>Cancelar</button>
               </div>
               {(errores.nombre || errores.horas) && (

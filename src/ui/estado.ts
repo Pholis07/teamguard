@@ -44,10 +44,12 @@ export type Accion =
   | { type: 'updateTask'; id: string; cambios: Partial<Omit<Task, 'id' | 'ownerId'>> }
   // Cambio manual de responsable: siempre queda en la bitácora (y en el acta).
   | { type: 'reassignTask'; id: string; ownerId: string; hora: string }
+  // Deshacer una reasignación: mismo camino que reassignTask (siempre deja registro), pero la bitácora dice que se deshizo.
+  | { type: 'deshacerReasignacion'; id: string; ownerId: string; hora: string }
   | { type: 'removeTask'; id: string }
   | { type: 'restoreTask'; task: Task; index: number }
   | { type: 'acceptProposal'; proposal: CoverageProposal; hora: string }
-  | { type: 'setAbsence'; absence: Absence | null; hora: string }
+  | { type: 'setAbsence'; absence: Absence | null; hora: string; deshacer?: boolean }
   | { type: 'addFile'; entrega: Entrega }
   | { type: 'reset' }
   | { type: 'setVersion'; version: Version }
@@ -76,6 +78,17 @@ const anotar = (antes: Estado, despues: Estado, hora: string, texto: string): Es
     equilibrio: { antes: equilibrio(contextoDe(antes)).indice, despues: equilibrio(contextoDe(despues)).indice },
   }
   return { ...despues, decisiones: [...antes.decisiones, decision] }
+}
+
+/** Camino único para cambiar de responsable: valida, cambia y anota. Solo cambia el texto de la bitácora. */
+function reasignar(estado: Estado, id: string, ownerId: string, hora: string, deshecho: boolean): Estado {
+  const actual = estado.tasks.find((t) => t.id === id)
+  if (!actual || actual.ownerId === ownerId || !estado.members.some((m) => m.id === ownerId)) return estado
+  const texto = deshecho
+    ? `${actual.title} vuelve a ${nombreDe(estado, ownerId)} (se deshizo el cambio)`
+    : `${actual.title} pasó de ${nombreDe(estado, actual.ownerId)} a ${nombreDe(estado, ownerId)} (cambio manual)`
+  const tasks = estado.tasks.map((t) => (t.id === actual.id ? { ...t, ownerId } : t))
+  return anotar(estado, { ...estado, tasks }, hora, texto)
 }
 
 const tareaValida = (t: Task, members: readonly Member[]) =>
@@ -132,13 +145,10 @@ export function reducer(estado: Estado, accion: Accion): Estado {
       if (!tareaValida(nueva, estado.members)) return estado
       return { ...estado, tasks: estado.tasks.map((t) => (t.id === actual.id ? nueva : t)) }
     }
-    case 'reassignTask': {
-      const actual = estado.tasks.find((t) => t.id === accion.id)
-      if (!actual || actual.ownerId === accion.ownerId || !estado.members.some((m) => m.id === accion.ownerId)) return estado
-      const texto = `${actual.title} pasó de ${nombreDe(estado, actual.ownerId)} a ${nombreDe(estado, accion.ownerId)} (cambio manual)`
-      const tasks = estado.tasks.map((t) => (t.id === actual.id ? { ...t, ownerId: accion.ownerId } : t))
-      return anotar(estado, { ...estado, tasks }, accion.hora, texto)
-    }
+    case 'reassignTask':
+      return reasignar(estado, accion.id, accion.ownerId, accion.hora, false)
+    case 'deshacerReasignacion':
+      return reasignar(estado, accion.id, accion.ownerId, accion.hora, true)
     case 'removeTask':
       // Una tarea con archivos entregados no se borra: se perdería trabajo real del equipo.
       if (estado.files.some((f) => f.taskId === accion.id)) return estado
@@ -164,11 +174,12 @@ export function reducer(estado: Estado, accion: Accion): Estado {
       }
     }
     case 'setAbsence': {
-      const { absence, hora } = accion
+      const { absence, hora, deshacer } = accion
+      const marca = deshacer ? ' (se deshizo)' : ''
       // Solo fechas: el motivo de una ausencia nunca se registra.
       const texto = absence
-        ? `Se registró la ausencia de ${nombreDe(estado, absence.memberId)} del ${rango(absence.from, absence.to)}`
-        : estado.absence && `Se retiró la ausencia de ${nombreDe(estado, estado.absence.memberId)}`
+        ? `Se registró la ausencia de ${nombreDe(estado, absence.memberId)} del ${rango(absence.from, absence.to)}${marca}`
+        : estado.absence && `Se retiró la ausencia de ${nombreDe(estado, estado.absence.memberId)}${marca}`
       const nuevo = { ...estado, absence }
       return texto ? anotar(estado, nuevo, hora, texto) : nuevo
     }

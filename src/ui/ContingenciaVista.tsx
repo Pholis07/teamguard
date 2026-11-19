@@ -6,7 +6,7 @@ import {
 } from '../domain'
 import { BarraCarga, Callout, Etiqueta, Icono, Pagina, Propiedades } from './bloques'
 import { equilibrio } from './equilibrio'
-import { COLOR_RIESGO, fecha, fechaValida, horas, miembroPorId, pct, plural, rango } from './formato'
+import { COLOR_RIESGO, fecha, fechaValida, horas, miembroPorId, pct, plural, rango, type PaginaId } from './formato'
 import './paginas.css'
 
 type Props = {
@@ -15,6 +15,8 @@ type Props = {
   onSetAbsence: (absence: Absence | null) => void
   /** Lo único que reasigna: la integración confirma la propuesta contra el estado actual. */
   onAccept: (proposal: CoverageProposal) => void
+  /** Navega a otra página (Tablero, Entrega) desde los enlaces de la confirmación. */
+  onIr: (pagina: PaginaId) => void
 }
 
 type Modo = 'propuesta' | 'editar' | 'rechazada'
@@ -30,14 +32,14 @@ const sumarDias = (iso: string, dias: number) => {
   return d.toISOString().slice(0, 10)
 }
 
-export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }: Props) {
+export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept, onIr }: Props) {
   const t = useTextos()
   const { members, tasks } = contexto
   const [modo, setModo] = useState<Modo>('propuesta')
   const [candidato, setCandidato] = useState<string | undefined>(undefined)
   const [rechazados, setRechazados] = useState<string[]>([])
   const [aviso, setAviso] = useState('')
-  const [cubierta, setCubierta] = useState<{ tarea: string; quien: string; carga: string } | null>(null)
+  const [cubierta, setCubierta] = useState<{ taskId: string; quienId: string; tarea: string; quien: string; carga: string } | null>(null)
   const [quien, setQuien] = useState('')
   const [desde, setDesde] = useState(DEMO_DATE)
   const [hasta, setHasta] = useState(sumarDias(DEMO_DATE, 2))
@@ -85,7 +87,7 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
     const nueva = p.projectedLoads.find((c) => c.memberId === p.candidateId)
     const t = tasks.find((x) => x.id === p.taskId)
     if (persona && nueva && t) {
-      setCubierta({ tarea: t.title, quien: persona.name, carga: `${horas(nueva.assignedHours)} de ${horas(nueva.availableHours)} h` })
+      setCubierta({ taskId: t.id, quienId: persona.id, tarea: t.title, quien: persona.name, carga: `${horas(nueva.assignedHours)} de ${horas(nueva.availableHours)} h` })
     }
     reiniciar()
     onAccept(p)
@@ -118,9 +120,15 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
     return `${horas(c.remainingHours)} h libres · faltan ${horas(tarea.estimatedHours - c.remainingHours)} h`
   }
 
-  const confirmacion = cubierta && (
+  // Si se deshizo la cobertura (Deshacer del aviso), la confirmación ya no es cierta y se retira.
+  const vigente = cubierta && tasks.find((x) => x.id === cubierta.taskId)?.ownerId === cubierta.quienId ? cubierta : null
+  const confirmacion = vigente && (
     <Callout icono="check" tono="verde" rol="status">
-      <p className="p-parr">{cubierta.tarea} ahora es de {cubierta.quien}. {cubierta.quien} queda en {cubierta.carga}.</p>
+      <p className="p-parr"><b>Cubierta:</b> {vigente.tarea} ahora es de {vigente.quien}. {vigente.quien} queda en {vigente.carga}.</p>
+      <div className="p-acciones">
+        <button type="button" className="btn btn-s" onClick={() => onIr('tablero')}>Ver en Tablero</button>
+        <button type="button" className="btn btn-s" onClick={() => onIr('entrega')}>Ver la bitácora en Entrega</button>
+      </div>
     </Callout>
   )
 
@@ -209,8 +217,14 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
               <Etiqueta color="naranja">Sin cubrir</Etiqueta>
             </li>
           ))}
-          {pendientes.length === 0 && <li className="p-afectada"><span className="fa">{ausente.name} no tiene tareas por cubrir en esas fechas.</span></li>}
+          {pendientes.length === 0 && <li className="p-afectada"><span className="fa">{vigente ? `Todas las tareas de ${ausente.name} están cubiertas.` : `${ausente.name} no tiene tareas abiertas en esas fechas: no hay nada que cubrir.`}</span></li>}
         </ul>
+        {pendientes.length === 0 && !vigente && (
+          <div className="p-acciones p-afectadas-acc">
+            <button type="button" className="btn btn-s" onClick={() => { reiniciar(); onSetAbsence(null) }}><Icono nombre="x" />Quitar ausencia</button>
+            <button type="button" className="btn btn-p" onClick={() => onIr('tablero')}>Ir al Tablero</button>
+          </div>
+        )}
       </section>
 
       {tarea && modo === 'rechazada' && (

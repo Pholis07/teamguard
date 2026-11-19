@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Icono, SelectorAcento } from './bloques'
+import { Etiqueta, Icono, SelectorAcento } from './bloques'
 import { Atajos } from './Atajos'
 import { atajoDeTecla, esCampo, EVENTO_SIMULAR, TECLA_DE } from './atajos'
 import { useTextos } from './version'
@@ -115,7 +115,7 @@ export function Shell({ pagina, proyecto, contadores, tema, acento, onAcento, on
             <b aria-current="page">{actual && <Icono nombre={actual.icono} />}{actual && etiqueta(actual)}</b>
           </nav>
           <span className="n-top-der">
-            <span className="n-estado">{proyecto.ejemplo ? 'Datos de ejemplo' : 'Proyecto nuevo'}</span>
+            <span className="n-estado"><Etiqueta color="gris">{proyecto.ejemplo ? 'Datos de ejemplo' : 'Proyecto nuevo'}</Etiqueta></span>
             {acciones}
           </span>
         </header>

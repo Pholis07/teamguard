@@ -11,7 +11,7 @@ import { Ayuda } from './ayuda'
 import { EVENTO_SIMULAR } from './atajos'
 import { BarraCarga, BaseDeDatos, Callout, Checklist, Etiqueta, Icono, Pagina, Propiedades, Toggle } from './bloques'
 import { equilibrio } from './equilibrio'
-import { COLOR_RIESGO, ESTADO_TAREA, fecha, horas, miembroPorId, pct, plural, type PaginaId } from './formato'
+import { COLOR_RIESGO, ESTADO_TAREA, fecha, horas, miembroPorId, pct, plural, rango, type PaginaId } from './formato'
 import './paginas.css'
 
 type Props = {
@@ -40,9 +40,11 @@ const leerEmpieza = () => { try { return sessionStorage.getItem(CLAVE_EMPIEZA) =
 const guardarEmpieza = () => { try { sessionStorage.setItem(CLAVE_EMPIEZA, '1') } catch { /* sin almacenamiento */ } }
 
 /** Primera tarea abierta y alguien más que podría tomarla: punto de partida de la simulación. */
-function simulacionInicial(members: readonly Member[], tasks: readonly Task[]) {
+function simulacionInicial(members: readonly Member[], tasks: readonly Task[], absences: RuleContext['absences'] = []) {
   const tarea = tasks.find((t) => t.status !== 'done')
-  const otro = tarea && members.find((m) => m.id !== tarea.ownerId)
+  const ausente = (id: string) => absences.some((a) => a.status === 'active' && a.memberId === id)
+  const otros = tarea ? members.filter((m) => m.id !== tarea.ownerId) : []
+  const otro = otros.find((m) => !ausente(m.id)) ?? otros[0]
   return tarea && otro ? { taskId: tarea.id, candidateId: otro.id } : null
 }
 
@@ -70,6 +72,7 @@ function FranjaEquilibrio({ eq, eqSim, veredicto, alerta, accion }: { eq: Eq; eq
         <p className="tb-eq" aria-label={`Equilibrio ${v.indice} de 100`}>
           <span className="tb-eq-n num" aria-hidden="true">{n}</span><span className="tb-eq-de" aria-hidden="true">/100</span>
         </p>
+        <p className="tb-eq-ley fa">100 = todo cabe</p>
         <p className="tb-hero-riesgo">
           <span className="fa">Riesgo</span>
           {cambia
@@ -107,7 +110,7 @@ export function TableroVista({ proyecto, ejemplo, members, tasks, files, context
     }
     window.addEventListener(EVENTO_SIMULAR, alternar)
     return () => window.removeEventListener(EVENTO_SIMULAR, alternar)
-  }, [members, tasks])
+  }, [members, tasks, contexto.absences])
 
   const cargas = useMemo(() => calculateLoads(members, tasks), [members, tasks])
   const simulacion = useMemo(() => {
@@ -140,16 +143,16 @@ export function TableroVista({ proyecto, ejemplo, members, tasks, files, context
 
   const proyectadas = simulacion?.projectedLoads
   const tareaSim = simulacion && tasks.find((t) => t.id === simulacion.taskId)
-  const sobreSim = proyectadas?.filter((c) => c.status === 'overloaded') ?? []
-  // Alguien con espacio que no es el dueño actual ni el candidato.
+  // Alguien con espacio que no es el dueño actual ni el candidato (ni está ausente).
+  const ausenteActiva = (id: string) => contexto.absences.some((a) => a.status === 'active' && a.memberId === id)
   const libre = simulacion && tareaSim && cargas.find((c) =>
-    c.memberId !== simulacion.currentOwnerId && c.memberId !== simulacion.candidateId &&
+    c.memberId !== simulacion.currentOwnerId && c.memberId !== simulacion.candidateId && !ausenteActiva(c.memberId) &&
     c.status === 'normal' && c.remainingHours >= tareaSim.estimatedHours)
   const nombreCandidato = (simulacion && miembroPorId(members, simulacion.candidateId)?.name) ?? ''
   const alternativa = libre ? `${miembroPorId(members, libre.memberId)?.name} tiene ${horas(libre.remainingHours)} h libres. ` : ''
 
   function abrirSimulacion() {
-    const inicial = simulacionInicial(members, tasks)
+    const inicial = simulacionInicial(members, tasks, contexto.absences)
     if (!inicial) return
     guardarSimulo()
     setSimulado(true)
@@ -175,6 +178,12 @@ export function TableroVista({ proyecto, ejemplo, members, tasks, files, context
   const proximas = [...abiertas].sort((a, b) => a.dueDate.localeCompare(b.dueDate)).slice(0, 3)
   const vencidas = abiertas.filter((t) => isTaskOverdue(t, contexto.asOf))
   const eqSim = simulacion ? equilibrio({ ...contexto, tasks: tareasSim }) : null
+  // La frase del recuadro, el titular y el riesgo salen del mismo equilibrio proyectado.
+  const candidatoAusente = !!eqSim && !!simulacion && eqSim.sinCubrir.some((t) => t.id === simulacion.taskId)
+  const ausenciaCandidato = simulacion && contexto.absences.find((a) => a.status === 'active' && a.memberId === simulacion.candidateId)
+  const sobreSim = eqSim && proyectadas ? proyectadas.filter((c) => eqSim.sobrecargados.includes(c.memberId)) : []
+  const otrasSinCubrir = eqSim && simulacion ? eqSim.sinCubrir.filter((t) => t.id !== simulacion.taskId) : []
+  const hayProblema = candidatoAusente || sobreSim.length > 0 || otrasSinCubrir.length > 0
   // Mientras se simula, el veredicto sale del equilibrio proyectado (misma fuente que el índice y el riesgo).
   const problemasSim = eqSim ? [
     eqSim.sinCubrir.length > 0 && `${eqSim.sinCubrir.map((t) => t.title).join(', ')} ${plural(eqSim.sinCubrir.length, 'quedaría', 'quedarían')} sin quién la cubra`,
@@ -216,17 +225,15 @@ export function TableroVista({ proyecto, ejemplo, members, tasks, files, context
       }
     >
       {ejemplo && !empiezaCerrada && (
-        <Callout icono="info">
-          <div className="tb-empieza-cab">
-            <h2 className="n-bd-tit">Empieza aquí</h2>
-            <button type="button" className="btn btn-g" onClick={() => { guardarEmpieza(); setEmpiezaCerrada(true) }} aria-label="Cerrar la guía Empieza aquí"><Icono nombre="x" tam={14} />Cerrar</button>
-          </div>
-          <ol className="tb-empieza">
-            <li><span>Simula una asignación, mira cómo cambia el equilibrio y, si te convence, asígnala.</span><button type="button" className="btn btn-s" onClick={abrirSimulacion} disabled={abiertas.length === 0 || members.length < 2}>Simular</button></li>
-            <li><span>Registra una ausencia y acepta quién la cubre.</span><button type="button" className="btn btn-s" onClick={() => onIr('contingencia')}>Ir a Contingencia</button></li>
-            <li><span>Revisa la entrega y la bitácora de decisiones.</span><button type="button" className="btn btn-s" onClick={() => onIr('entrega')}>Ir a Entrega</button></li>
+        <section className="tb-guia" aria-label="Empieza aquí">
+          <h2 className="tb-guia-tit">Empieza aquí</h2>
+          <ol className="tb-guia-pasos">
+            <li><button type="button" className="btn btn-s" onClick={abrirSimulacion} disabled={abiertas.length === 0 || members.length < 2}>Simular una asignación</button></li>
+            <li><button type="button" className="btn btn-s" onClick={() => onIr('contingencia')}>Registrar una ausencia</button></li>
+            <li><button type="button" className="btn btn-s" onClick={() => onIr('entrega')}>Revisar la entrega</button></li>
           </ol>
-        </Callout>
+          <button type="button" className="btn btn-g tb-guia-x" onClick={() => { guardarEmpieza(); setEmpiezaCerrada(true) }} aria-label="Cerrar la guía Empieza aquí"><Icono nombre="x" tam={14} /><span>Cerrar</span></button>
+        </section>
       )}
       {vencidas.length > 0 && (
         <p className="p-nota" role="status">
@@ -235,7 +242,7 @@ export function TableroVista({ proyecto, ejemplo, members, tasks, files, context
       )}
 
       {sim && (
-        <Callout icono="simular" tono={sobreSim.length > 0 ? 'amarillo' : 'n'} rol="status">
+        <Callout icono="simular" tono={hayProblema ? 'amarillo' : 'n'} rol="status">
           <p className="p-frase">
             Si
             <label className="sr-only" htmlFor="sim-tarea">Tarea</label>
@@ -245,17 +252,24 @@ export function TableroVista({ proyecto, ejemplo, members, tasks, files, context
             pasa a
             <label className="sr-only" htmlFor="sim-quien">Asignar a</label>
             <select id="sim-quien" className="p-select" value={sim.candidateId} onChange={(e) => setSim({ ...sim, candidateId: e.target.value })}>
-              {members.filter((m) => m.id !== tasks.find((t) => t.id === sim.taskId)?.ownerId).map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+              {members.filter((m) => m.id !== tasks.find((t) => t.id === sim.taskId)?.ownerId).map((m) => <option key={m.id} value={m.id}>{m.name}{ausenteActiva(m.id) ? ' (ausente)' : ''}</option>)}
             </select>
           </p>
-          <p className="p-parr">
-            {sobreSim.length > 0
-              ? `${sobreSim.map((c) => `${miembroPorId(members, c.memberId)?.name} pasaría a ${horas(c.assignedHours)} de ${horas(c.availableHours)} h (${pct(c.percentage)})`).join('; ')}. ${eqSim && eqSim.indice < eq.indice ? `El equilibrio bajaría de ${eq.indice} a ${eqSim.indice}. ` : ''}${alternativa}Nada cambia hasta que alguien lo decida.`
-              : 'Cabe sin sobrecargar a nadie. Nada cambia hasta que alguien lo decida.'}
+          <p className="p-parr" id="sim-frase">
+            {[
+              candidatoAusente && `${nombreCandidato} está ausente esas fechas${ausenciaCandidato ? ` (${rango(ausenciaCandidato.from, ausenciaCandidato.to)})` : ''}: ${tareaSim?.title} quedaría sin quién la cubra.`,
+              ...sobreSim.map((c) => `${miembroPorId(members, c.memberId)?.name} pasaría a ${horas(c.assignedHours)} de ${horas(c.availableHours)} h (${pct(c.percentage)}).`),
+              otrasSinCubrir.length > 0 && `${otrasSinCubrir.map((t) => t.title).join(', ')} ${plural(otrasSinCubrir.length, 'sigue', 'siguen')} sin quién la cubra.`,
+              eqSim && eqSim.indice < eq.indice && `El equilibrio bajaría de ${eq.indice} a ${eqSim.indice}.`,
+              !candidatoAusente && alternativa.trim(),
+              !hayProblema && 'Cabe sin sobrecargar a nadie.',
+              'Nada cambia hasta que alguien lo decida.',
+            ].filter(Boolean).join(' ')}
           </p>
           <div className="p-acciones">
             <button
-              type="button" className="btn btn-p" disabled={!simulacion}
+              type="button" className="btn btn-p" disabled={!simulacion || candidatoAusente}
+              aria-describedby={candidatoAusente ? 'sim-frase' : undefined}
               aria-label={sobreSim.length > 0 ? `Asignar de todos modos ${tareaSim?.title} a ${nombreCandidato}` : undefined}
               onClick={() => { onReasignar(sim.taskId, sim.candidateId); setSim(null) }}
             >
@@ -273,6 +287,7 @@ export function TableroVista({ proyecto, ejemplo, members, tasks, files, context
         </section>
       )}
 
+      <div className="tb-par">
       <BaseDeDatos
         titulo={<>{t.cargaEquipo}<Ayuda tema="la carga del equipo">{t.ayudaCarga}</Ayuda></>}
         subtitulo="% de su tiempo disponible"
@@ -314,6 +329,7 @@ export function TableroVista({ proyecto, ejemplo, members, tasks, files, context
         <p className="n-bd-sub">% de las horas del equipo</p>
         <GraficaAporte datos={aporte(members, tasks, files)} />
       </section>
+      </div>
 
       <section className="n-bd">
         <h2 className="n-bd-tit">Próximas entregas</h2>

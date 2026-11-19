@@ -74,3 +74,20 @@ test('restoreMember reinserta al integrante en su posición y recupera su ausenc
   expect(de_vuelta.absence).toEqual(libre.absence)
   expect(reducer(de_vuelta, { type: 'restoreMember', member: miembro, index: 0 })).toBe(de_vuelta)
 })
+
+test('deshacer una reasignación devuelve la tarea, deja registro y dice que se deshizo', () => {
+  const base = ejemplo()
+  const movida = reducer(base, { type: 'reassignTask', id: 't2', ownerId: 'm3', hora: '11:30' })
+  const e = reducer(movida, { type: 'deshacerReasignacion', id: 't2', ownerId: 'm2', hora: '11:31' })
+  expect(e.tasks.find((t) => t.id === 't2')!.ownerId).toBe('m2')
+  expect(e.decisiones).toHaveLength(2)
+  expect(e.decisiones[1].texto).toBe('Ficha vuelve a Luis (se deshizo el cambio)')
+  expect(reducer(e, { type: 'deshacerReasignacion', id: 't2', ownerId: 'm2', hora: '11:32' })).toBe(e)
+  expect(reducer(base, { type: 'deshacerReasignacion', id: 't2', ownerId: 'm9', hora: '11:32' })).toBe(base)
+})
+
+test('deshacer una ausencia lo dice en la bitácora', () => {
+  const con = reducer(ejemplo(), { type: 'setAbsence', absence: DEMO_ABSENCE, hora: '11:40' })
+  const sin = reducer(con, { type: 'setAbsence', absence: null, hora: '11:41', deshacer: true })
+  expect(sin.decisiones[1].texto).toBe('Se retiró la ausencia de Ana (se deshizo)')
+})

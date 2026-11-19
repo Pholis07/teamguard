@@ -45,6 +45,8 @@ export type Textos = {
   lista: readonly (readonly [string, string])[]
   banda: { t: string; p1: string; p2: string }
   listaTitulo: string
+  /** Frase corta bajo el título de «Lo que hace TeamGuard». */
+  listaSub: string
 }
 
 const ESTUDIANTES: Textos = {
@@ -96,6 +98,7 @@ const ESTUDIANTES: Textos = {
     p2: 'El motivo de una ausencia nunca se guarda; todo vive en esta pestaña.',
   },
   listaTitulo: 'Lo que hace TeamGuard',
+  listaSub: 'TeamGuard calcula, propone y deja el registro. La decisión siempre la toma una persona.',
 }
 
 const EMPRESAS: Textos = {
@@ -147,6 +150,7 @@ const EMPRESAS: Textos = {
     p2: 'El motivo de una ausencia nunca se guarda; todo vive en esta pestaña.',
   },
   listaTitulo: 'Lo que hace TeamGuard',
+  listaSub: 'TeamGuard calcula, propone y deja el registro. La decisión siempre la toma una persona.',
 }
 
 export const TEXTOS: Record<Version, Textos> = { estudiantes: ESTUDIANTES, empresas: EMPRESAS }

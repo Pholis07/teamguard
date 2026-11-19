@@ -91,7 +91,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 h1 { margin: 0; font-size: 32px; font-weight: 600; line-height: 1.2; letter-spacing: -.02em; }
 h2 { margin: 0; font-size: 1.5em; font-weight: 600; line-height: 1.3; }
 h3 { margin: 0; font-size: 1.25em; font-weight: 600; line-height: 1.3; }
-p { margin: 0; }
+p { margin: 0; text-wrap: pretty; }
 a { color: var(--ac-tx); }
 
 /* Utilidades */
@@ -177,7 +177,7 @@ a { color: var(--ac-tx); }
 .n-migas .sep { flex: none; color: var(--tx3); }
 .n-migas b { font-weight: 500; }
 .n-top-der { flex: none; display: flex; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; }
-.n-estado { color: var(--tx2); }
+.n-estado { color: var(--tx2); display: inline-flex; }
 .n-top .btn { height: 28px; padding: 0 10px; }
 .n-presentar { padding: 0 12px; }
 .n-menu { display: none; }
@@ -250,6 +250,7 @@ button.n-caja { cursor: pointer; }
 .cel { width: 100%; height: 30px; padding: 0 6px; border: 2px solid transparent; border-radius: 4px; background: none; font-size: 14px; }
 .cel:hover { background: var(--hover); }
 .cel:focus, .cel:focus-visible { outline: 0; border-color: var(--ac); background: var(--bg); }
+.cel:focus-visible { outline: 2px solid var(--ac); outline-offset: -2px; }
 select.cel { cursor: pointer; }
 
 /* Barra de carga: una sola pieza para Tablero, Integrantes y Contingencia. La marca del 100 % es una muesca del color del fondo. */
@@ -317,9 +318,12 @@ select.cel { cursor: pointer; }
 .sa-m[aria-checked="true"] svg { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .sa-m:hover { transform: none; } }
 @media (max-width: 760px) {
-  .sa { gap: 12px; }
-  .sa-m { width: 32px; height: 32px; }
-  .sa-m::after { content: ""; position: absolute; inset: -6px; }
+  .sa { gap: 0; }
+  .sa-m { width: 44px; height: 44px; background: none !important; box-shadow: none !important; }
+  .sa-m::before { content: ""; position: absolute; width: 30px; height: 30px; border-radius: 50%; background: var(--m); box-shadow: inset 0 0 0 1px rgba(128, 128, 128, .35); }
+  :root[data-tema="claro"] .sa-m::before { background: var(--mc); }
+  .sa-m[aria-checked="true"]::before { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--tx2); }
+  .sa-m svg { position: relative; }
 }
 /* Reiniciar la demo: texto de poco peso, con confirmación en línea. */
 .n-reiniciar { align-self: flex-start; height: auto; min-height: 28px; padding: 2px 8px; color: var(--tx3); font-size: 13px; font-weight: 400; text-decoration: underline; text-underline-offset: 3px; }

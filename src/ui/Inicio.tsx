@@ -114,7 +114,8 @@ function Vista() {
   }, [pasoV, activo, quieto])
 
   const eq = useContador(EQ[paso], 1400)
-  const alto = EQ[paso] < 100
+  // El riesgo sale del número que se ve (el animado), no del destino: así nunca dice «100 · Riesgo Alto».
+  const alto = eq < 100
   const ausente = paso >= 1
   const cubierta = paso >= FINAL
   const msgs = [[0], [1], [2], [3, 4]]
@@ -136,6 +137,7 @@ function Vista() {
               <small>Equilibrio</small>
               <span className="in-eq-n num">{eq}</span>
               <span className="in-eq-t">{alto ? 'Riesgo Alto' : 'Riesgo Bajo'}</span>
+              <small className="in-eq-ley">100 = todo cabe</small>
             </div>
           </div>
           {[
@@ -225,7 +227,8 @@ function CardEquilibrio() {
     return () => window.clearInterval(t)
   }, [activo, quieto])
   const valor = quieto ? 100 : [100, 57, 100][paso]
-  const alto = valor < 100
+  const n = useContador(valor, 900)
+  const alto = n < 100
   return (
     <article className="in-card in-grande-c" id="tablero" style={{ ['--k' as string]: 0 }}>
       <div className="in-card-t">
@@ -235,8 +238,9 @@ function CardEquilibrio() {
       <div className="in-card-v" aria-hidden="true">
         <div className={`in-eq-gr in-eq ${alto ? 'alto' : ''}`}>
           <small>Equilibrio del equipo</small>
-          <span className="in-eq-n num"><Cuenta a={valor} ms={900} /></span>
+          <span className="in-eq-n num">{n}</span>
           <span className="in-eq-t">{alto ? 'Riesgo Alto' : 'Riesgo Bajo'}</span>
+          <small className="in-eq-ley">100 = todo cabe</small>
         </div>
         <div className="in-eq-pasos">{[100, 57, 100].map((v, i) => <span key={i} className={!quieto && paso === i ? 'on' : ''}>{v}</span>)}</div>
       </div>
@@ -451,7 +455,10 @@ export function Inicio({ tema, acento, onAcento, version, onTema, onEmpezar, onE
         </Revela>
 
         <Revela className="in-seccion in-oferta" id="como">
-          <h2>{t.listaTitulo}</h2>
+          <div className="in-oferta-cab">
+            <h2>{t.listaTitulo}</h2>
+            <p>{t.listaSub}</p>
+          </div>
           <ol>
             {t.lista.map(([a, b], i) => (
               <li key={a}><span className="num">0{i + 1}</span><p><b>{a}</b>{b}</p></li>

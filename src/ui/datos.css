@@ -6,7 +6,7 @@
 .dt-cuenta { color: var(--tx2); }
 .dt-error { margin: 0; padding: 2px 6px 4px; font-size: 12px; line-height: 1.3; color: var(--tag-rojo-tx); background: var(--tag-rojo-bg); border-radius: 4px; }
 .dt-error[hidden] { display: none; }
-.dt-celda .dt-error { position: absolute; z-index: 2; left: 0; top: calc(100% - 3px); min-width: 180px; max-width: 260px; box-shadow: var(--pop, 0 2px 8px rgba(0, 0, 0, .3)); }
+.dt-celda .dt-error { position: static; margin-top: 4px; min-width: 0; max-width: none; }
 .dt-pista { color: var(--tx3); font-size: 13px; }
 .dt-carga { display: flex; align-items: center; gap: 8px; }
 .dt-carga .dt-motivo { white-space: nowrap; }
@@ -36,7 +36,7 @@
 .n-tabla:has(.dt-fila) th { padding-top: 0; padding-bottom: 0; }
 .n-tabla:has(.dt-fila) tr.n-fila-nueva td { padding: 0; }
 .dt-fila .cel, .dt-fila .dt-estado { max-width: 100%; text-overflow: ellipsis; }
-.dt-celda .cel[type="date"]:focus-visible, .p-campo input:focus-visible { outline: 0; border-color: var(--ac); box-shadow: 0 0 0 1px var(--ac); }
+.dt-celda .cel[type="date"]:focus-visible, .p-campo input:focus-visible { outline: 2px solid var(--ac); outline-offset: -2px; border-color: var(--ac); box-shadow: none; }
 .dt-archivo { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; }
 .dt-archivo .dt-borrar { margin-left: auto; }
 .dt-archivo .dt-motivo { flex: 1 0 100%; }
@@ -86,7 +86,7 @@
 @media (hover: none) { .dt-borrador .btn { min-height: 44px; } }
 .p-select, .p-campo input[type="date"] { color-scheme: dark; border-width: 2px; font-family: inherit; }
 :root[data-tema="claro"] .p-select { color-scheme: light; }
-.p-select:focus-visible, .p-campo input:focus-visible { outline: 0; border-color: var(--ac); box-shadow: 0 0 0 1px var(--ac); }
+.p-select:focus-visible, .p-campo input:focus-visible { outline: 2px solid var(--ac); outline-offset: 1px; border-color: var(--ac); box-shadow: none; }
 select.cel { color-scheme: dark; }
 :root[data-tema="claro"] select.cel { color-scheme: light; }
 .n-tabla th.n-ayuda-cab .n-ayuda-pop { left: auto; right: 0; text-align: left; }
@@ -94,6 +94,13 @@ select.cel { color-scheme: dark; }
 .n-tabla:has(.dt-fila) th.n-ayuda-cab:nth-child(-n+2) .n-ayuda-pop { left: 0; right: auto; }
 /* Los avisos bajo una celda y la ayuda del encabezado no se recortan; la tabla deja sitio mientras están a la vista. */
 .n-tabla:has(.dt-fila) td:has(.dt-error), .n-tabla:has(.dt-fila) th.n-ayuda-cab { overflow: visible; }
-.n-bd-marco:has(.dt-celda .dt-error) { padding-bottom: 72px; }
 .n-bd-marco:has(.n-ayuda) { min-height: 230px; }
-.dt-celda .dt-error { background: linear-gradient(var(--tag-rojo-bg), var(--tag-rojo-bg)), var(--card, var(--bg)); border: 1px solid var(--tag-rojo-tx); }
+.dt-celda .dt-error { border: 1px solid var(--tag-rojo-tx); }
+
+/* Escritorio: el motivo del icono deshabilitado solo aparece al apuntar o enfocar la fila; en táctil y móvil siempre se ve. */
+@media (hover: hover) and (min-width: 761px) {
+  .dt-fila .dt-motivo { opacity: 0; transition: opacity .12s ease-out; }
+  .dt-fila:hover .dt-motivo, .dt-fila:focus-within .dt-motivo { opacity: 1; }
+}
+.dt-borrar svg { width: 16px; height: 16px; }
+@media (max-width: 760px) { .dt-borrar svg { width: 20px; height: 20px; } .dt-borrar:disabled { opacity: .6; } }

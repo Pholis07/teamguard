@@ -109,12 +109,12 @@ function AppInterna() {
     if (absence) {
       avisar({
         texto: `Ausencia de ${nombreDe(absence.memberId)} registrada (${rango(absence.from, absence.to)}).`,
-        deshacer: () => dispatch({ type: 'setAbsence', absence: antes, hora: ahora() }),
+        deshacer: () => dispatch({ type: 'setAbsence', absence: antes, hora: ahora(), deshacer: true }),
       })
     } else if (antes) {
       avisar({
         texto: `Ausencia de ${nombreDe(antes.memberId)} retirada.`,
-        deshacer: () => dispatch({ type: 'setAbsence', absence: antes, hora: ahora() }),
+        deshacer: () => dispatch({ type: 'setAbsence', absence: antes, hora: ahora(), deshacer: true }),
       })
     }
   }
@@ -124,7 +124,7 @@ function AppInterna() {
     dispatch({ type: 'acceptProposal', proposal, hora: ahora() })
     avisar({
       texto: `${titulo} ahora es de ${nombreDe(proposal.candidateId)}.`,
-      deshacer: () => dispatch({ type: 'reassignTask', id: proposal.taskId, ownerId: proposal.currentOwnerId, hora: ahora() }),
+      deshacer: () => dispatch({ type: 'deshacerReasignacion', id: proposal.taskId, ownerId: proposal.currentOwnerId, hora: ahora() }),
     })
   }
 
@@ -136,7 +136,7 @@ function AppInterna() {
     dispatch({ type: 'reassignTask', id: taskId, ownerId, hora: ahora() })
     avisar({
       texto: `${tarea.title} ahora es de ${nombreDe(ownerId)}.`,
-      deshacer: () => dispatch({ type: 'reassignTask', id: taskId, ownerId: antes, hora: ahora() }),
+      deshacer: () => dispatch({ type: 'deshacerReasignacion', id: taskId, ownerId: antes, hora: ahora() }),
     })
   }
 
@@ -222,6 +222,7 @@ function AppInterna() {
           absence={estado.absence}
           onSetAbsence={cambiarAusencia}
           onAccept={aceptarCobertura}
+          onIr={setPagina}
         />
       )}
       {pagina === 'entrega' && (

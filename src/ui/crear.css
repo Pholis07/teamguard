@@ -26,7 +26,4 @@
   .ce-volver { height: 44px; padding: 0 12px; }
   .ce-tarjeta .ce-cambiar { height: 44px; padding: 0 12px; }
   .ce-sec { height: 44px; }
-  .ce-acento .sa { gap: 12px; }
-  .ce-acento .sa-m { width: 32px; height: 32px; }
-  .ce-acento .sa-m::after { content: ""; position: absolute; inset: -6px; }
 }

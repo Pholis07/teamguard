@@ -30,7 +30,7 @@ const msgTitulo = (v: string) => (nombreValido(v) ? null : 'Escribe el nombre de
 const msgHoras = (v: string) => {
   const h = leerHoras(v)
   const ok = horasValidas(h) && h >= HORAS_MIN && h <= HORAS_MAX && Number.isInteger(h * 2)
-  return ok ? null : `Escribe horas entre ${HORAS_MIN} y ${HORAS_MAX}, de media en media hora (por ejemplo 2 o 2.5).`
+  return ok ? null : `Usa de ${HORAS_MIN} a ${HORAS_MAX} h, por ejemplo 2 o 2.5.`
 }
 
 export function TareasVista({ members, tasks, files, dispatch, onIr }: Props) {
@@ -59,7 +59,7 @@ export function TareasVista({ members, tasks, files, dispatch, onIr }: Props) {
     dispatch({ type: 'reassignTask', id: tarea.id, ownerId, hora: ahora() })
     avisar({
       texto: `${tarea.title} pasó de ${nombre(antes)} a ${nombre(ownerId)}.`,
-      deshacer: () => dispatch({ type: 'reassignTask', id: tarea.id, ownerId: antes, hora: ahora() }),
+      deshacer: () => dispatch({ type: 'deshacerReasignacion', id: tarea.id, ownerId: antes, hora: ahora() }),
     })
   }
   const eliminar = (tarea: Task, indice: number) => {
@@ -159,7 +159,7 @@ export function TareasVista({ members, tasks, files, dispatch, onIr }: Props) {
                     title={conArchivos ? 'Tiene archivos entregados: no se puede eliminar' : `Eliminar ${t.title}`}
                     onClick={() => eliminar(t, i)}
                   >
-                    <Icono nombre="basura" tam={15} />
+                    <Icono nombre="basura" tam={16} />
                   </button>
                   {conArchivos && <span className="dt-motivo" aria-hidden="true">Tiene archivos</span>}
                 </div>
