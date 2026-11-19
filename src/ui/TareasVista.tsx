@@ -10,7 +10,7 @@ type Props = {
   members: readonly Member[]
   tasks: readonly Task[]
   dispatch: Dispatch<Accion>
-  /** Navega a otra página (para «Ir a 👥 Integrantes»). */
+  /** Navega a otra página (para «Ir a Integrantes»). */
   onIr?: (p: PaginaId) => void
 }
 
@@ -38,7 +38,7 @@ export function TareasVista({ members, tasks, dispatch, onIr }: Props) {
 
   return (
     <Pagina
-      icono="✅"
+      icono="tareas"
       titulo="Tareas"
       propiedades={<Propiedades items={[
         { icono: 'estado', etiqueta: 'Abiertas', valor: <span className="num">{abiertas}</span> },
@@ -47,12 +47,12 @@ export function TareasVista({ members, tasks, dispatch, onIr }: Props) {
       ]} />}
     >
       {members.length === 0 ? (
-        <Callout icono="💡">
+        <Callout icono="info">
           <p className="dt-callout-p">Para crear tareas primero agrega a quienes las harán.</p>
-          {onIr && <button type="button" className="btn btn-s" onClick={() => onIr('integrantes')}>Ir a 👥 Integrantes</button>}
+          {onIr && <button type="button" className="btn btn-s" onClick={() => onIr('integrantes')}><Icono nombre="integrantes" tam={14} />Ir a Integrantes</button>}
         </Callout>
       ) : tasks.length === 0 && (
-        <Callout icono="💡">Crea la primera tarea para ver cómo se reparte la carga del equipo.</Callout>
+        <Callout icono="info">Crea la primera tarea para ver cómo se reparte la carga del equipo.</Callout>
       )}
       <BaseDeDatos
         columnas={[

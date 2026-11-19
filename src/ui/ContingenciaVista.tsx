@@ -62,7 +62,7 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
   function registrar(e: React.FormEvent) {
     e.preventDefault()
     const memberId = quien || members[0]?.id
-    if (!memberId) return setError('Primero agrega integrantes en 👥 Integrantes.')
+    if (!memberId) return setError('Primero agrega integrantes en Integrantes.')
     if (!fechaValida(desde) || !fechaValida(hasta)) return setError('Elige fechas válidas.')
     if (hasta < desde) return setError('«Hasta» no puede ser antes que «Desde».')
     setError('')
@@ -111,7 +111,7 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
 
   const confirmacion = cubierta && (
     <Callout icono="check" tono="verde" rol="status">
-      <p className="p-parr">✓ {cubierta.tarea} ahora es de {cubierta.quien}. {cubierta.quien} queda en {cubierta.carga}.</p>
+      <p className="p-parr">{cubierta.tarea} ahora es de {cubierta.quien}. {cubierta.quien} queda en {cubierta.carga}.</p>
     </Callout>
   )
 
@@ -119,10 +119,10 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
   if (!absence || !ausente) {
     const sinGente = members.length === 0
     return (
-      <Pagina icono="🛟" titulo="Contingencia">
+      <Pagina icono="contingencia" titulo="Contingencia">
         <p className="p-estado">Nadie está ausente.<span className="fa">Si alguien no puede trabajar unos días, regístralo y TeamGuard propone quién cubre.</span></p>
         {confirmacion}
-        {sinGente && <Callout icono="info" tono="amarillo" rol="status"><p className="p-parr">Todavía no hay integrantes. Agrégalos en 👥 Integrantes para registrar una ausencia.</p></Callout>}
+        {sinGente && <Callout icono="info" tono="amarillo" rol="status"><p className="p-parr">Todavía no hay integrantes. Agrégalos en Integrantes para registrar una ausencia.</p></Callout>}
         <Callout icono="ausencia">
           <form className="p-campos" onSubmit={registrar} noValidate>
             <label className="p-campo">Integrante
@@ -152,7 +152,7 @@ export function ContingenciaVista({ contexto, absence, onSetAbsence, onAccept }:
 
   return (
     <Pagina
-      icono="🛟"
+      icono="contingencia"
       titulo="Contingencia"
       propiedades={
         <Propiedades items={[

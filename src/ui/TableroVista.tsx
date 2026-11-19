@@ -32,7 +32,7 @@ export function TableroVista({ proyecto, members, tasks, onIr }: Props) {
   if (members.length === 0 || tasks.length === 0) {
     const pasos = [members.length > 0, tasks.length > 0, simulado].filter(Boolean).length
     return (
-      <Pagina icono="👋" titulo={`Bienvenido a ${proyecto}`}>
+      <Pagina icono="tablero" titulo={`Bienvenido a ${proyecto}`}>
         <p className="p-parr">Aquí verás quién carga cuánto trabajo y si alguien se pasa de su disponibilidad. Empieza con tres pasos.</p>
         <p className="p-progreso num" aria-live="polite">{pasos} de 3 pasos</p>
         <Checklist items={[
@@ -84,7 +84,7 @@ export function TableroVista({ proyecto, members, tasks, onIr }: Props) {
 
   return (
     <Pagina
-      icono="📋"
+      icono="tablero"
       titulo="Tablero"
       propiedades={
         <Propiedades items={[
@@ -198,7 +198,7 @@ export function TableroVista({ proyecto, members, tasks, onIr }: Props) {
           )
         })}
       </BaseDeDatos>
-      <button type="button" className="btn btn-g p-enlace p-suelto" onClick={() => onIr('tareas')}>Editar en ✅ Tareas</button>
+      <button type="button" className="btn btn-g p-enlace p-suelto" onClick={() => onIr('tareas')}>Editar en Tareas</button>
     </Pagina>
   )
 }

@@ -1,7 +1,7 @@
 import { Children, type ReactNode } from 'react'
-import { horas, pct, type ColorEtiqueta } from './formato'
+import { PAGINAS, horas, pct, type ColorEtiqueta } from './formato'
 
-/* Íconos: trazos Lucide en línea, un solo grosor (1.7) en toda la interfaz. */
+/* Íconos: trazos Lucide en línea, un solo grosor (1.5) en toda la interfaz. */
 const TRAZOS = {
   check: <path d="M20 6 9 17l-5-5" />,
   alerta: <><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" /></>,
@@ -27,6 +27,14 @@ const TRAZOS = {
   chevron: <path d="m7 15 5 5 5-5M7 9l5-5 5 5" />,
   basura: <><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></>,
   presentar: <path d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5Z" />,
+  tablero: <><rect width="7" height="18" x="3" y="3" rx="1.5" /><rect width="7" height="10" x="14" y="3" rx="1.5" /><rect width="7" height="5" x="14" y="16" rx="1.5" /></>,
+  integrantes: <><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0" /><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8" /><path d="M18 14.2a6.5 6.5 0 0 1 3.5 5.8" /></>,
+  tareas: <><rect width="18" height="18" x="3" y="3" rx="2" /><path d="m8 12 3 3 5-6" /></>,
+  contingencia: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="3.5" /><path d="m5.6 5.6 3.9 3.9" /><path d="m14.5 14.5 3.9 3.9" /><path d="m18.4 5.6-3.9 3.9" /><path d="m9.5 14.5-3.9 3.9" /></>,
+  entrega: <><path d="m7.5 4.3 9 5.2" /><path d="M21 8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" /><path d="m3.3 7 8.7 5 8.7-5" /><path d="M12 22V12" /></>,
+  inicio: <><path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V21h14V9.5" /></>,
+  luna: <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />,
+  sol: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.9 4.9 1.4 1.4" /><path d="m17.7 17.7 1.4 1.4" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.3 17.7-1.4 1.4" /><path d="m19.1 4.9-1.4 1.4" /></>,
   compartir: <><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" /></>,
 } as const
 
@@ -34,19 +42,21 @@ export type NombreIcono = keyof typeof TRAZOS
 
 export function Icono({ nombre, tam = 16 }: { nombre: NombreIcono; tam?: number }) {
   return (
-    <svg aria-hidden="true" width={tam} height={tam} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="icono">
+    <svg aria-hidden="true" width={tam} height={tam} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="icono">
       {TRAZOS[nombre]}
     </svg>
   )
 }
 
-/** Página de Notion: emoji de 72px, título, propiedades, divisor y bloques. Va dentro de la columna que pone Shell. */
-export function Pagina({ icono, titulo, propiedades, children }: { icono: string; titulo: ReactNode; propiedades?: ReactNode; children?: ReactNode }) {
+/** Página: etiqueta superior «PROYECTO · SECCIÓN», ícono de línea junto al título, propiedades como fichas, divisor y bloques.
+ *  `icono` es un nombre de ícono; `seccion` (opcional) sale de PAGINAS cuando el ícono es el de una página. */
+export function Pagina({ icono, seccion, titulo, propiedades, children }: { icono: NombreIcono; seccion?: string; titulo: ReactNode; propiedades?: ReactNode; children?: ReactNode }) {
+  const etiqueta = seccion ?? PAGINAS.find((p) => p.icono === icono)?.label
   return (
     <article className="n-doc">
       <header className="n-cab">
-        <div className="n-icono" aria-hidden="true">{icono}</div>
-        <h1 className="n-titulo">{titulo}</h1>
+        {etiqueta && <p className="n-eyebrow">Proyecto · {etiqueta}</p>}
+        <h1 className="n-titulo"><span className="n-titulo-i" aria-hidden="true"><Icono nombre={icono} tam={28} /></span><span>{titulo}</span></h1>
         {propiedades}
       </header>
       <hr className="n-div" />
@@ -55,7 +65,7 @@ export function Pagina({ icono, titulo, propiedades, children }: { icono: string
   )
 }
 
-/** Lista de propiedades: ícono de línea + etiqueta gris de 160px + valor. */
+/** Fichas con borde en una fila que se ajusta: ícono + etiqueta gris + valor. */
 export function Propiedades({ items }: { items: { icono: NombreIcono; etiqueta: string; valor: ReactNode }[] }) {
   return (
     <dl className="n-props">
@@ -69,11 +79,12 @@ export function Propiedades({ items }: { items: { icono: NombreIcono; etiqueta: 
   )
 }
 
-/** Bloque tenue con emoji (o ícono de línea) a la izquierda. `tono` pinta el fondo con una etiqueta de color. */
-export function Callout({ icono, tono = 'n', rol, children }: { icono: string | NombreIcono; tono?: 'n' | ColorEtiqueta; rol?: 'status' | 'alert'; children: ReactNode }) {
+/** Bloque con borde izquierdo de 2px y sin fondo. `tono`: neutro, blanco (info/verde/azul) o alerta (amarillo/naranja/rojo). `icono` es un nombre de ícono; si no existe, se usa «info». */
+export function Callout({ icono, tono = 'n', rol, children }: { icono: string; tono?: 'n' | ColorEtiqueta; rol?: 'status' | 'alert'; children: ReactNode }) {
+  const nombre: NombreIcono = icono in TRAZOS ? (icono as NombreIcono) : 'info'
   return (
     <div className={tono === 'n' ? 'n-callout' : `n-callout tono-${tono}`} role={rol}>
-      <span className="n-callout-i">{icono in TRAZOS ? <Icono nombre={icono as NombreIcono} /> : icono}</span>
+      <span className="n-callout-i"><Icono nombre={nombre} /></span>
       <div className="n-callout-c">{children}</div>
     </div>
   )
@@ -117,7 +128,7 @@ export function Toggle({ titulo, abierto, children }: { titulo: ReactNode; abier
   )
 }
 
-/** Etiqueta de Notion: siempre lleva texto. */
+/** Etiqueta: siempre lleva texto (grises; rojo/naranja/amarillo = alerta). */
 export function Etiqueta({ color, children }: { color: ColorEtiqueta; children: ReactNode }) {
   return <span className={`tag tag-${color}`}>{children}</span>
 }
@@ -125,7 +136,7 @@ export function Etiqueta({ color, children }: { color: ColorEtiqueta; children: 
 /* La barra mide hasta 150 % de la capacidad; la marca está en el 100 %. */
 const ESCALA = 1.5
 
-/** Barra de carga: relleno azul hasta el 100 %, excedente rayado en rojo y texto «5 / 4 h · 125 %» + «1 h de más». */
+/** Barra de carga: relleno claro hasta el 100 %, excedente rayado en color de alerta y texto «5 / 4 h · 125 %» + «1 h de más». */
 export function BarraCarga({ asignadas, disponibles, soloBarra }: { asignadas: number; disponibles: number; soloBarra?: boolean }) {
   const sinCapacidad = disponibles <= 0
   const dentro = sinCapacidad ? 0 : (Math.min(asignadas, disponibles) / (disponibles * ESCALA)) * 100
@@ -153,10 +164,10 @@ export function BarraCarga({ asignadas, disponibles, soloBarra }: { asignadas: n
   )
 }
 
-/** Tabla tipo Notion. `children` son filas `<tr>` (usa `.cel` en inputs para edición en línea). Con `onNueva` agrega «+ Nueva». */
+/** Tabla. `children` son filas `<tr>` (usa `.cel` en inputs para edición en línea). Con `onNueva` agrega «+ Nueva». */
 export function BaseDeDatos({ titulo, columnas, onNueva, textoNueva = 'Nueva', vacio, children }: {
   titulo?: ReactNode
-  columnas: { icono: NombreIcono; nombre: string; ancho?: string }[]
+  columnas: { icono?: NombreIcono; nombre: string; ancho?: string }[]
   onNueva?: () => void
   textoNueva?: string
   /** Texto cuando no hay filas (pasa `vacio` y children vacío). */
@@ -170,7 +181,7 @@ export function BaseDeDatos({ titulo, columnas, onNueva, textoNueva = 'Nueva', v
       <div className="n-bd-marco">
         <table className="n-tabla">
           <thead>
-            <tr>{columnas.map((c) => <th key={c.nombre} style={c.ancho ? { width: c.ancho } : undefined}><Icono nombre={c.icono} tam={14} />{c.nombre}</th>)}</tr>
+            <tr>{columnas.map((c) => <th key={c.nombre} style={c.ancho ? { width: c.ancho } : undefined}>{c.nombre}</th>)}</tr>
           </thead>
           <tbody>
             {children}

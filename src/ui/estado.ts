@@ -27,6 +27,7 @@ export type NuevaTarea = {
 // `hora` la pone quien despacha, para que el reducer siga siendo puro.
 // Simular, editar y rechazar no pasan por aquí: solo aceptar cambia ownerId.
 export type Accion =
+  | { type: 'entrar' }
   | { type: 'iniciar'; nombre: string }
   | { type: 'cargarEjemplo' }
   | { type: 'salir' }
@@ -64,6 +65,8 @@ const tareaValida = (t: Task, members: readonly Member[]) =>
 
 export function reducer(estado: Estado, accion: Accion): Estado {
   switch (accion.type) {
+    case 'entrar':
+      return { ...estadoInicial(), fase: 'app', proyecto: null }
     case 'iniciar':
       if (!nombreValido(accion.nombre)) return estado
       return { ...estadoInicial(), fase: 'app', proyecto: { nombre: accion.nombre.trim(), ejemplo: false } }

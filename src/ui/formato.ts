@@ -1,4 +1,5 @@
 import type { Member, Task } from '../domain'
+import type { NombreIcono } from './bloques'
 
 /* Formato: las cifras se redondean solo al mostrarlas. */
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
@@ -14,18 +15,18 @@ export const miembroPorId = (members: readonly Member[], id: string) => members.
 
 /* Páginas de la app (barra lateral y migas). */
 export type PaginaId = 'tablero' | 'integrantes' | 'tareas' | 'contingencia' | 'entrega'
-export const PAGINAS: readonly { id: PaginaId; emoji: string; label: string }[] = [
-  { id: 'tablero', emoji: '📋', label: 'Tablero' },
-  { id: 'integrantes', emoji: '👥', label: 'Integrantes' },
-  { id: 'tareas', emoji: '✅', label: 'Tareas' },
-  { id: 'contingencia', emoji: '🛟', label: 'Contingencia' },
-  { id: 'entrega', emoji: '📦', label: 'Entrega' },
+export const PAGINAS: readonly { id: PaginaId; icono: NombreIcono; label: string }[] = [
+  { id: 'tablero', icono: 'tablero', label: 'Tablero' },
+  { id: 'integrantes', icono: 'integrantes', label: 'Integrantes' },
+  { id: 'tareas', icono: 'tareas', label: 'Tareas' },
+  { id: 'contingencia', icono: 'contingencia', label: 'Contingencia' },
+  { id: 'entrega', icono: 'entrega', label: 'Entrega' },
 ]
 
 export type Tema = 'oscuro' | 'claro'
 export type Proyecto = { nombre: string; ejemplo: boolean }
 
-/* Colores de etiqueta de Notion y sus usos fijos. */
+/* Colores de etiqueta (escala monocroma + alerta) y sus usos fijos. */
 export type ColorEtiqueta = 'gris' | 'cafe' | 'naranja' | 'amarillo' | 'verde' | 'azul' | 'morado' | 'rosa' | 'rojo'
 export const ESTADO_TAREA: Record<Task['status'], { texto: string; color: ColorEtiqueta }> = {
   pending: { texto: 'Pendiente', color: 'gris' },
