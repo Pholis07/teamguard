@@ -8,6 +8,8 @@ import {
   type RuleContext,
 } from './domain'
 import { Compartir } from './Compartir'
+import { PASOS } from './guion'
+import { GuiaPresentacion } from './Presentar'
 import { EntregaVista } from './delivery/EntregaVista'
 import type { Decision } from './delivery/acta'
 import { progresoEntrega, type Entrega } from './delivery/zip'
@@ -135,6 +137,30 @@ export default function App() {
     document.documentElement.classList.toggle('dark', oscuro)
   }, [oscuro])
 
+  // Demo guiada: null = sin presentar; si no, índice en PASOS.
+  const [paso, setPaso] = useState<number | null>(null)
+  // shortcut: entregas de ejemplo con los IDs del caso común de B (t1–t3, m1–m3); solo sirven para la demo.
+  const muestra = (taskId: string, uploaderId: string, nombre: string, texto: string) => {
+    if (estado.files.some((f) => f.taskId === taskId)) return
+    dispatch({ type: 'addFile', entrega: { taskId, uploaderId, file: new File([texto], nombre, { type: 'text/plain' }) } })
+  }
+  function irAPaso(n: number) {
+    setPaso(n)
+    setVista(PASOS[n].vista)
+    if (PASOS[n].preparaEntregas) {
+      muestra('t1', 'm1', 'boceto.txt', 'Boceto de Ana, subido antes de su ausencia (ejemplo).')
+      muestra('t2', 'm2', 'ficha.txt', 'Ficha de Luis (ejemplo).')
+    }
+  }
+  function presentar() {
+    dispatch({ type: 'reset' })
+    irAPaso(0)
+  }
+  const extra =
+    paso !== null && PASOS[paso].preparaEntregas
+      ? { label: 'Completar el Resumen', onClick: () => muestra('t3', 'm3', 'resumen.txt', 'Resumen de Sol (ejemplo).') }
+      : undefined
+
   return (
     <div className="shell">
       <aside className="side">
@@ -179,6 +205,9 @@ export default function App() {
           <span className="fa">/</span>
           <span>{VISTAS[vista].label}</span>
           <span className="acciones">
+            <button className="btn btn-p" onClick={presentar} disabled={paso !== null}>
+              Presentar
+            </button>
             <Compartir />
             <button className="btn btn-s" aria-pressed={oscuro} onClick={() => setOscuro(!oscuro)}>
               {oscuro ? 'Tema claro' : 'Tema oscuro'}
@@ -192,6 +221,7 @@ export default function App() {
           {VISTAS[vista].render({ estado, contexto, dispatch })}
         </main>
       </div>
+      {paso !== null && <GuiaPresentacion paso={paso} onIr={irAPaso} onSalir={() => setPaso(null)} extra={extra} />}
     </div>
   )
 }
